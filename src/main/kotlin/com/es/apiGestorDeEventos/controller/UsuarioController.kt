@@ -64,15 +64,27 @@ class UsuarioController {
         return ResponseEntity(mapOf("token" to token),HttpStatus.CREATED)
     }
 
-    @DeleteMapping("/eliminar/{nombre}")
+    @DeleteMapping("/eliminarusuario/{nombre}")
     fun deleteUser(
         @PathVariable nombre: String, authentication: Authentication
-    ): String {
-        return if (authentication.name == nombre || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
-            "el usuario esta eliminado"
-        }else{
-            "no tienes poder para eliminar"
+    ): ResponseEntity<Any>? {
+        if (authentication.name == nombre || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
+            usuarioService.deleteUserByUsername(nombre,authentication)
         }
+        return ResponseEntity(mapOf("mensajes" to "Accion no autorizada"), HttpStatus.FORBIDDEN)
+    }
+
+    @PutMapping("/actualizarusuario/{nombre}")
+    fun updateUser(
+        @PathVariable nombre: String,
+        @RequestBody updatedUser: Usuario,
+        authentication: Authentication
+    ): ResponseEntity<Any>? {
+        // Verificar si el usuario está autorizado a actualizar sus datos
+        if (authentication.name == nombre || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
+            usuarioService.updateUserByUsername(nombre, updatedUser)
+        }
+        return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
     }
 
 }
