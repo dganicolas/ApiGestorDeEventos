@@ -23,7 +23,7 @@ data class Locales(
     var descripcion: String? = null, // Descripción del local
 
     @Column(nullable = false)
-    var aforoMaximo: Int? = null, // Aforo máximo
+    var aforoMaximo: Int? = null, // Aforo máximo s
 
     @Column(nullable = false)
     var precioInvitados: BigDecimal? = null, // Precio por invitado
