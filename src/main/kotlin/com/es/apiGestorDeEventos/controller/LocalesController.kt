@@ -44,12 +44,9 @@ class LocalesController {
         }
         return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
     }
-//
-//    @GetMapping("/allUser")
-//    fun allUser(authentication: Authentication): ResponseEntity<Any> {
-//        if (authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
-//            usuarioService.getAllUsers()
-//        }
-//        return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
-//    }
+
+    @GetMapping("/alllocal")
+    fun allLocal(authentication: Authentication): ResponseEntity<Any> {
+        return localService.getAllLocal()
+    }
 }
