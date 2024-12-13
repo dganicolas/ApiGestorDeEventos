@@ -1,5 +1,6 @@
 package com.es.apiGestorDeEventos.model
 
+import com.fasterxml.jackson.annotation.JsonBackReference
 import jakarta.persistence.*
 import java.math.BigDecimal
 
@@ -40,6 +41,7 @@ data class Locales(
 
     @ManyToOne()
     @JoinColumn(name = "id_propietario", nullable = false)
+    @JsonBackReference
     var propietario: Usuario? = null, // Propietario del local
 
     @OneToMany(mappedBy = "local", cascade = [CascadeType.ALL], orphanRemoval = true)

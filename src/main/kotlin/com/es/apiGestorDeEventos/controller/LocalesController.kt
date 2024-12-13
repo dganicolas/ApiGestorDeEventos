@@ -28,6 +28,7 @@ class LocalesController {
     fun deleteLocal(
         @PathVariable nombre: String, authentication: Authentication
     ): ResponseEntity<Any>? {
+        if(nombre == "") return ResponseEntity(mapOf("mensajes" to "el nombre no deb estar vacio"), HttpStatus.BAD_REQUEST)
         return localService.eliminarLocal(nombre,authentication)
     }
 //

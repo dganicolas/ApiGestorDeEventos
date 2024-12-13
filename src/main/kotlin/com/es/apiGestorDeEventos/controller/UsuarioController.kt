@@ -69,10 +69,10 @@ class UsuarioController {
     fun deleteUser(
         @PathVariable nombre: String, authentication: Authentication
     ): ResponseEntity<Any>? {
-        if (authentication.name == nombre || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
-            usuarioService.deleteUserByUsername(nombre,authentication)
+        if (authentication.name == nombre || authentication.authorities.any { println(it); it.authority == "ROLE_ADMIN" }) {
+            return usuarioService.deleteUserByUsername(nombre,authentication)
         }
-        return ResponseEntity(mapOf("mensajes" to "Accion no autorizada"), HttpStatus.FORBIDDEN)
+            return ResponseEntity(mapOf("mensajes" to "Accion no autorizada"), HttpStatus.FORBIDDEN)
     }
 
     //metodo funcional y comprobado

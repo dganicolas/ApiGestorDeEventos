@@ -1,5 +1,7 @@
 package com.es.apiGestorDeEventos.model
 
+import com.fasterxml.jackson.annotation.JsonBackReference
+import com.fasterxml.jackson.annotation.JsonManagedReference
 import jakarta.persistence.*
 
 @Entity
@@ -18,8 +20,5 @@ data class Usuario(
 
     @OneToMany(mappedBy = "propietario", cascade = [CascadeType.ALL], orphanRemoval = true)
     var locales: MutableList<Locales> = mutableListOf(), // Locales asociados al usuario
-
-    @OneToMany(mappedBy = "usuario", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var reservas: MutableList<Reservas> = mutableListOf(), // Reservas asociadas al usuario
 )
 

@@ -1,7 +1,6 @@
 package com.es.apiGestorDeEventos.service
 
 import com.es.apiGestorDeEventos.model.Locales
-import com.es.apiGestorDeEventos.model.Usuario
 import com.es.apiGestorDeEventos.repository.LocalRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -26,6 +25,7 @@ class LocalService {
         if(localRepository.findByNombre(newLocal.nombre).isPresent) return ResponseEntity(mapOf("mensaje" to "El nombre del local ya existe"), HttpStatus.CONFLICT)
 
         if (newLocal.propietario == propietario || authentication.authorities.any { it.authority == "ROLE_ADMIN" }){
+
             val camposErroneos = mutableListOf<String>()
 
             if (newLocal.nombre.isNullOrBlank()) camposErroneos.add("nombre")
@@ -56,19 +56,28 @@ class LocalService {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado")
         }
     }
-    fun comprobarSiElLocalTieneReservas():Boolean{
-
+    fun comprobarSiElLocalNoTieneReservas(local: Locales):Boolean{
+        local.reservas.forEach { if(it.estado.name == "CONFIRMADA"||it.estado.name == "PENDIENTE_DE_PAGO")return false }
+        return true
     }
 
     fun eliminarLocal(nombre: String, authentication: Authentication): ResponseEntity<Any>? {
         val propietario = usuarioService.findByUsername(authentication.name) ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
         val local = findByNombre(nombre) ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
+
         if (local.propietario == propietario || authentication.authorities.any { it.authority == "ROLE_ADMIN" }){
-            if(comprobarSiElLocalTieneReservas()){
+
+            if(comprobarSiElLocalNoTieneReservas(local)){
                 localRepository.delete(local)
                 return ResponseEntity(mapOf("mensaje" to "local eliminado"), HttpStatus.NO_CONTENT)
             }
-            return ResponseEntity(mapOf("mensaje" to "El local tiene reservas vigentes"), HttpStatus.CONFLICT)
+            else{
+                if(authentication.authorities.any { it.authority == "ROLE_ADMIN" }){
+                    localRepository.delete(local)
+                    return ResponseEntity(mapOf("mensaje" to "local eliminado por privilegios de admin"), HttpStatus.NO_CONTENT)
+                }
+                return ResponseEntity(mapOf("mensaje" to "El local tiene reservas vigentes"), HttpStatus.CONFLICT)
+            }
         }
         return ResponseEntity(mapOf("mensaje" to "Accion no autorizada"), HttpStatus.FORBIDDEN)
     }

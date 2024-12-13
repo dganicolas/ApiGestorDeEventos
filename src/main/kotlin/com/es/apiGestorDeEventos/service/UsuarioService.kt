@@ -68,7 +68,7 @@ class UsuarioService : UserDetailsService {
                 HttpStatus.UNAUTHORIZED
             )
         }
-        return ResponseEntity(mapOf("eliminado" to "Usuario eliminado"), HttpStatus.NO_CONTENT)
+        return ResponseEntity(mapOf("mensaje" to "Usuario eliminado"), HttpStatus.OK)
     }
 
     fun updateUserByUsername(nombre: String, updatedUser: Usuario): ResponseEntity<Any>? {

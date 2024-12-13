@@ -1,5 +1,6 @@
 package com.es.apiGestorDeEventos.model
 
+import com.fasterxml.jackson.annotation.JsonBackReference
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -24,6 +25,7 @@ data class Reservas(
 
     @ManyToOne()
     @JoinColumn(name = "id_local", nullable = false)
+    @JsonBackReference
     var local: Locales, // Local asociado a la reserva
 
     @Column(nullable = false)
