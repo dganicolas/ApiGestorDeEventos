@@ -37,7 +37,7 @@ class UsuarioController {
         @RequestBody newUsuario: Usuario
     ) : ResponseEntity<Any>? {
         // Comprobación mínima
-        // -> La obviamos por ahora
+        // -> La obviamos por ahoraf
         if(newUsuario.password.isNullOrBlank() || newUsuario.username.isNullOrBlank()){
             return ResponseEntity(mapOf("ERROR" to "usuario debe tener email,contraseña"),HttpStatus.BAD_REQUEST)
         }
