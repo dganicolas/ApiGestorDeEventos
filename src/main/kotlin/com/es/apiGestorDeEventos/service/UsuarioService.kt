@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import java.util.*
 
 @Service
 class UsuarioService : UserDetailsService {
@@ -37,6 +38,7 @@ class UsuarioService : UserDetailsService {
             .build()
     }
 
+
     /*
     MÉTODO PARA INSERTAR UN USUARIO
      */
@@ -45,7 +47,7 @@ class UsuarioService : UserDetailsService {
 
         val newUsuario = usuario
         // Comprobamos que el usuario no existe en la base de datos
-        if(usuarioRepository.findByUsername(newUsuario.username).isPresent){
+        if (usuarioRepository.findByUsername(newUsuario.username).isPresent) {
             return ResponseEntity(mapOf("ERROR" to "Ese nombre ya existe"), HttpStatus.BAD_REQUEST)
         }
 
@@ -55,24 +57,27 @@ class UsuarioService : UserDetailsService {
         return ResponseEntity(newUsuario, HttpStatus.CREATED)
     }
 
-    fun deleteUserByUsername(nombre: String, authentication: Authentication): ResponseEntity<Any>?{
+    fun deleteUserByUsername(nombre: String, authentication: Authentication): ResponseEntity<Any>? {
         val usuario = usuarioRepository.findByUsername(nombre).orElseThrow {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado")
         }
         usuarioRepository.delete(usuario)
         if (authentication.name == nombre) {
-            return ResponseEntity(mapOf("mensaje" to "Usuario eliminado. Su sesión se ha cerrado."), HttpStatus.UNAUTHORIZED)
+            return ResponseEntity(
+                mapOf("mensaje" to "Usuario eliminado. Su sesión se ha cerrado."),
+                HttpStatus.UNAUTHORIZED
+            )
         }
-        return ResponseEntity(mapOf("eliminado" to "Usuario eliminado"),HttpStatus.NO_CONTENT)
+        return ResponseEntity(mapOf("eliminado" to "Usuario eliminado"), HttpStatus.NO_CONTENT)
     }
 
-    fun updateUserByUsername(nombre: String, updatedUser: Usuario): ResponseEntity<Any>?{
+    fun updateUserByUsername(nombre: String, updatedUser: Usuario): ResponseEntity<Any>? {
         val usuario = usuarioRepository.findByUsername(nombre).orElseThrow {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado")
         }
-        updatedUser.username?.let {nuevoUsername-> usuario.username = nuevoUsername }
-        updatedUser.password?.let {nuevoPassword-> usuario.password = passwordEncoder.encode(nuevoPassword) }
-        updatedUser.roles?.let {nuevosRoles-> usuario.roles = nuevosRoles }
+        updatedUser.username?.let { nuevoUsername -> usuario.username = nuevoUsername }
+        updatedUser.password?.let { nuevoPassword -> usuario.password = passwordEncoder.encode(nuevoPassword) }
+        updatedUser.roles?.let { nuevosRoles -> usuario.roles = nuevosRoles }
         usuarioRepository.save(usuario)
         return ResponseEntity(mapOf("mensaje" to "Usuario actualizado correctamente"), HttpStatus.OK)
     }
@@ -93,5 +98,11 @@ class UsuarioService : UserDetailsService {
             return ResponseEntity(usuariosSinPasswords, HttpStatus.OK)
         }
         return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
+    }
+
+    fun findByUsername(nombre: String): Usuario? {
+        return usuarioRepository.findByUsername(nombre).orElseThrow {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado")
+        }
     }
 }

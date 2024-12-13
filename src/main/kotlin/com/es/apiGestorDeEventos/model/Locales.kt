@@ -20,6 +20,7 @@ data class Locales(
     @Column(nullable = false)
     var direccion: String? = null, // Dirección del local
 
+    @Column(nullable = false)
     var descripcion: String? = null, // Descripción del local
 
     @Column(nullable = false)
@@ -31,8 +32,10 @@ data class Locales(
     @Column(nullable = false)
     var menuDisponible: Boolean = false, // Indica si el local ofrece menú
 
+    @Column()
     var precioMenu: BigDecimal? = null, // Precio del menú por persona
 
+    @Column()
     var descripcionMenu: String? = null, // Descripción del menú f
 
     @ManyToOne(fetch = FetchType.LAZY)

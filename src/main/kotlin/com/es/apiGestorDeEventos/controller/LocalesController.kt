@@ -1,23 +1,27 @@
 package com.es.apiGestorDeEventos.controller
 
 import com.es.apiGestorDeEventos.model.Locales
-import com.es.apiGestorDeEventos.model.Usuario
+import com.es.apiGestorDeEventos.service.LocalService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
-import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/locales")
 class LocalesController {
 
+    @Autowired
+    private lateinit var localService: LocalService
+
+
     @PostMapping("/register")
     fun register(
         @RequestBody newLocal: Locales,
+        authentication: Authentication
     ): ResponseEntity<Any>? {
-
+        return localService.crearLocal(newLocal,authentication)
     }
 //
 //    @DeleteMapping("/eliminarusuario/{nombre}")
