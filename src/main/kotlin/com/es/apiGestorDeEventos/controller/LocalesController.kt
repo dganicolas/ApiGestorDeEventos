@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/locales")
 class LocalesController {
 
-//    @PostMapping("/register")
-//    fun register(
-//        @RequestBody newLocal: Locales
-//    ) : ResponseEntity<Any>? {
-//
-//    }
+    @PostMapping("/register")
+    fun register(
+        @RequestBody newLocal: Locales,
+    ): ResponseEntity<Any>? {
+
+    }
 //
 //    @DeleteMapping("/eliminarusuario/{nombre}")
 //    fun deleteUser(

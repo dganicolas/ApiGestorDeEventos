@@ -64,6 +64,7 @@ class UsuarioController {
         return ResponseEntity(mapOf("token" to token),HttpStatus.CREATED)
     }
 
+    //metodo funcional y comprobado
     @DeleteMapping("/eliminarusuario/{nombre}")
     fun deleteUser(
         @PathVariable nombre: String, authentication: Authentication
@@ -74,6 +75,7 @@ class UsuarioController {
         return ResponseEntity(mapOf("mensajes" to "Accion no autorizada"), HttpStatus.FORBIDDEN)
     }
 
+    //metodo funcional y comprobado
     @PutMapping("/actualizarusuario/{nombre}")
     fun updateUser(
         @PathVariable nombre: String,
@@ -87,6 +89,7 @@ class UsuarioController {
         return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
     }
 
+    //metodo funcional y comprobado
     @GetMapping("/alluser")
     fun allUser(authentication: Authentication): ResponseEntity<Any> {
        return usuarioService.getAllUsers(authentication.name)
