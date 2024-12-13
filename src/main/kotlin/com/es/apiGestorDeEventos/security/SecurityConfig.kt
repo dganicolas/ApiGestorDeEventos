@@ -39,7 +39,6 @@ class SecurityConfig {
         return http.csrf { csfr -> csfr.disable() }// cross-site Forgery
             .authorizeHttpRequests{ auth -> auth
                 .requestMatchers("/usuarios/login","/usuarios/register").permitAll()
-                .requestMatchers(HttpMethod.DELETE,"/rutas_protegidas/recurso2/{id}").hasRole("ADMIN")
                 .anyRequest().authenticated()
             }// los recursos protegidos y publicos
             .oauth2ResourceServer{ oauth2-> oauth2.jwt(Customizer.withDefaults()) }

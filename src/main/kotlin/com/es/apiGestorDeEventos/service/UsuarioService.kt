@@ -76,4 +76,17 @@ class UsuarioService : UserDetailsService {
         usuarioRepository.save(usuario)
         return ResponseEntity(mapOf("mensaje" to "Usuario actualizado correctamente"), HttpStatus.OK)
     }
+
+    fun getAllUsers(): ResponseEntity<Any> {
+        val usuarios = usuarioRepository.findAll() // Obtener todos los usuarios de la base de datos
+        if (usuarios.isEmpty()) {
+            return ResponseEntity(mapOf("mensaje" to "No hay usuarios registrados"), HttpStatus.NO_CONTENT)
+        }
+
+        val usuariosSinPasswords = usuarios.map { usuario ->
+            usuario.password = ""
+        }
+
+        return ResponseEntity(usuariosSinPasswords, HttpStatus.OK)
+    }
 }
