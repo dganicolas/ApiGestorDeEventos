@@ -23,12 +23,13 @@ class LocalesController {
     ): ResponseEntity<Any>? {
         return localService.crearLocal(newLocal,authentication)
     }
-//
-//    @DeleteMapping("/eliminarusuario/{nombre}")
-//    fun deleteUser(
-//        @PathVariable nombre: String, authentication: Authentication
-//    ): ResponseEntity<Any>? {
-//    }
+
+    @DeleteMapping("/eliminarlocal/{nombre}")
+    fun deleteLocal(
+        @PathVariable nombre: String, authentication: Authentication
+    ): ResponseEntity<Any>? {
+        return localService.eliminarLocal(nombre,authentication)
+    }
 //
 //    @PutMapping("/actualizarusuario/{nombre}")
 //    fun updateUser(

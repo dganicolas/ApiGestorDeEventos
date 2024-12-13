@@ -18,11 +18,11 @@ data class Reservas(
     @Column(nullable = false)
     var tipoDeEvento: TipoDeEvento, // Tipo de evento (Enum)
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "id_usuario", nullable = false)
     var usuario: Usuario, // Usuario que creó la reserva
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "id_local", nullable = false)
     var local: Locales, // Local asociado a la reserva
 

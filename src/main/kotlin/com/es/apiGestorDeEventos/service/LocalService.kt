@@ -1,12 +1,14 @@
 package com.es.apiGestorDeEventos.service
 
 import com.es.apiGestorDeEventos.model.Locales
+import com.es.apiGestorDeEventos.model.Usuario
 import com.es.apiGestorDeEventos.repository.LocalRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 
 @Service
@@ -19,7 +21,10 @@ class LocalService {
     private lateinit var localRepository: LocalRepository
 
     fun crearLocal(newLocal: Locales, authentication: Authentication): ResponseEntity<Any>? {
-        val propietario = newLocal.propietario?.username?.let { usuarioService.findByUsername(it) } ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
+        val propietario = usuarioService.findByUsername(authentication.name) ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
+
+        if(localRepository.findByNombre(newLocal.nombre).isPresent) return ResponseEntity(mapOf("mensaje" to "El nombre del local ya existe"), HttpStatus.CONFLICT)
+
         if (newLocal.propietario == propietario || authentication.authorities.any { it.authority == "ROLE_ADMIN" }){
             val camposErroneos = mutableListOf<String>()
 
@@ -42,6 +47,28 @@ class LocalService {
             localRepository.save(newLocal)
 
             return ResponseEntity(mapOf("mensaje" to "Local creado correctamente"), HttpStatus.CREATED)
+        }
+        return ResponseEntity(mapOf("mensaje" to "Accion no autorizada"), HttpStatus.FORBIDDEN)
+    }
+
+    fun findByNombre(nombre: String): Locales? {
+        return localRepository.findByNombre(nombre).orElseThrow {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado")
+        }
+    }
+    fun comprobarSiElLocalTieneReservas():Boolean{
+
+    }
+
+    fun eliminarLocal(nombre: String, authentication: Authentication): ResponseEntity<Any>? {
+        val propietario = usuarioService.findByUsername(authentication.name) ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
+        val local = findByNombre(nombre) ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
+        if (local.propietario == propietario || authentication.authorities.any { it.authority == "ROLE_ADMIN" }){
+            if(comprobarSiElLocalTieneReservas()){
+                localRepository.delete(local)
+                return ResponseEntity(mapOf("mensaje" to "local eliminado"), HttpStatus.NO_CONTENT)
+            }
+            return ResponseEntity(mapOf("mensaje" to "El local tiene reservas vigentes"), HttpStatus.CONFLICT)
         }
         return ResponseEntity(mapOf("mensaje" to "Accion no autorizada"), HttpStatus.FORBIDDEN)
     }

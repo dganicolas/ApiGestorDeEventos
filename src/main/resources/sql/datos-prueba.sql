@@ -1,54 +1,6 @@
-INSERT INTO `usuarios`(
-`id`, `password`, `roles`, `username`
-) VALUES (
-1,'$2a$10$DBc2FPq.4XperQMRTGpYnufwdTFxFCJtRZj1zsX.7vFo9YVe9rCyW','USER','luis'
-)
-
-INSERT INTO `usuarios`(
-`id`, `password`, `roles`, `username`
-) VALUES (
-2,'$2a$10$DBc2FPq.4XperQMRTGpYnufwdTFxFCJtRZj1zsX.7vFo9YVe9rCyW','ADMIN','nico'
-)
-
-INSERT INTO `usuarios`(`id`, `password`, `roles`, `username`)
-VALUES (
-3, '2a$10$DBc2FPq.4XperQMRTGpYnufwdTFxFCJtRZj1zsX.7vFo9YVe9rCyW', 'USER', 'cura_pedro'
-);
-
-INSERT INTO `local_de_eventos`(
-    `idLocal`, `nombre`, `tipoDeLocal`, `direccion`, `descripcion`,
-    `aforoMaximo`, `precioInvitados`, `menuDisponible`, `precioMenu`,
-    `descripcionMenu`, `id_propietario`
-)
-VALUES (
-    NULL, -- El idLocal se generará automáticamente
-    'El Gran Salón', -- Nombre del local
-    'SALON_DE_CELEBRACIONES', -- Tipo de local (Enum)
-    'Calle Mayor 123, Ciudad', -- Dirección
-    'Un espacioso salón para todo tipo de celebraciones.', -- Descripción
-    150, -- Aforo máximo
-    25.50, -- Precio por invitado
-    true, -- Menú disponible
-    15.75, -- Precio del menú
-    'Incluye entrada, plato principal y postre.', -- Descripción del menú
-    2 -- ID del propietario (referencia a la tabla de usuarios)
-);
-
-INSERT INTO `local_de_eventos`(
-    `idLocal`, `nombre`, `tipoDeLocal`, `direccion`, `descripcion`,
-    `aforoMaximo`, `precioInvitados`, `menuDisponible`, `precioMenu`,
-    `descripcionMenu`, `id_propietario`
-)
-VALUES (
-    NULL, -- El idLocal se generará automáticamente
-    'Iglesia de San Pedro', -- Nombre del local
-    'IGLESIA', -- Tipo de local (Enum)
-    'Calle de la Paz 45, Ciudad', -- Dirección
-    'Un lugar sagrado perfecto para ceremonias religiosas.', -- Descripción
-    200, -- Aforo máximo
-    5.00, -- Precio por invitado (puede ser 0 si no aplica)
-    false, -- Menú disponible (no tiene menú)
-    NULL, -- Precio del menú (NULL porque no aplica)
-    NULL, -- Descripción del menú (NULL porque no aplica)
-    3 -- ID del propietario (el cura, referencia a la tabla de usuarios)
-);
+INSERT INTO `usuarios`(`id`, `password`, `roles`, `username`) VALUES (1, '$2a$10$DBc2FPq.4XperQMRTGpYnufwdTFxFCJtRZj1zsX.7vFo9YVe9rCyW', 'USER', 'luis');
+INSERT INTO `usuarios`(`id`, `password`, `roles`, `username`) VALUES (2, '$2a$10$DBc2FPq.4XperQMRTGpYnufwdTFxFCJtRZj1zsX.7vFo9YVe9rCyW', 'ADMIN', 'nico');
+INSERT INTO `usuarios`(`id`, `password`, `roles`, `username`) VALUES (3, '$2a$10$DBc2FPq.4XperQMRTGpYnufwdTFxFCJtRZj1zsX.7vFo9YVe9rCyW', 'USER', 'cura_pedro');
+INSERT INTO `local_de_eventos`(`id_local`, `nombre`, `tipo_de_local`, `direccion`, `descripcion`, `aforo_maximo`, `precio_invitados`, `menu_disponible`, `precio_menu`, `descripcion_menu`, `id_propietario`) VALUES (1, 'El Gran Salón', 'SALON_DE_CELEBRACIONES', 'Calle Mayor 123, Ciudad', 'Un espacioso salón para todo tipo de celebraciones.', 150, 25.50, TRUE, 15.75, 'Incluye entrada, plato principal y postre.', 2);
+INSERT INTO `local_de_eventos`(`id_local`, `nombre`, `tipo_de_local`, `direccion`, `descripcion`, `aforo_maximo`, `precio_invitados`, `menu_disponible`, `precio_menu`, `descripcion_menu`, `id_propietario`) VALUES (2, 'Iglesia de San Pedro', 'IGLESIA', 'Calle de la Paz 45, Ciudad', 'Un lugar sagrado perfecto para ceremonias religiosas.', 200, 5.00, FALSE, NULL, NULL, 3);
+INSERT INTO reservas (id_usuario, id_local, dia_evento, tipo_de_evento, total_personas, menu_incluido, total, estado)VALUES (1, 2, '2024-12-15', 'BODA', 100, false, 2000.00, 'PENDIENTE_DE_PAGO');

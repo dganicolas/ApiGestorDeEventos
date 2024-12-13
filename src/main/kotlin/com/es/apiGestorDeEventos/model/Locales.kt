@@ -38,9 +38,12 @@ data class Locales(
     @Column()
     var descripcionMenu: String? = null, // Descripción del menú f
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "id_propietario", nullable = false)
-    var propietario: Usuario? = null // Propietario del local
+    var propietario: Usuario? = null, // Propietario del local
+
+    @OneToMany(mappedBy = "local", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var reservas: MutableList<Reservas> = mutableListOf(), // Reservas asociadas al local
 )
 
 enum class TipoDeLocal {
