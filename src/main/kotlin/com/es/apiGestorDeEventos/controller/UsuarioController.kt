@@ -57,7 +57,7 @@ class UsuarioController {
             return ResponseEntity(mapOf("mensajes" to "Credenciales incorrecta dude"), HttpStatus.UNAUTHORIZED)
         }
 
-        // si pasamos la autenticacion, significa que estamos bien autenticados Dx
+        // si pasamos la autenticacion, significa que estamos bien autenticados Dxs
         //paamos a generar el token
         var token = ""
         token = tokenService.generarToken(authentication)
