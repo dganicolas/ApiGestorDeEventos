@@ -46,7 +46,7 @@ class UsuarioController {
 
     }
 
-    //metodo funcional y comprobado
+    //metodo funcional y comprobado :D
     //METODO (ENDPOINT) PARA HACER UN LOGIN
     @PostMapping("/login")
     fun login(@RequestBody usuario: Usuario):ResponseEntity<Any>?{
