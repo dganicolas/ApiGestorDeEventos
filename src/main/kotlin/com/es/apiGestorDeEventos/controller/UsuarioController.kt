@@ -10,10 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/usuarios")
@@ -65,6 +62,17 @@ class UsuarioController {
 
         println(authentication)
         return ResponseEntity(mapOf("token" to token),HttpStatus.CREATED)
+    }
+
+    @DeleteMapping("/eliminar/{nombre}")
+    fun deleteUser(
+        @PathVariable nombre: String, authentication: Authentication
+    ): String {
+        return if (authentication.name == nombre || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
+            "el usuario esta eliminado"
+        }else{
+            "no tienes poder para eliminar"
+        }
     }
 
 }
