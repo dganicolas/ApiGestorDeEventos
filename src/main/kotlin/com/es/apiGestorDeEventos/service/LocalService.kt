@@ -99,6 +99,7 @@ class LocalService {
         local.propietario?.let{ if(authentication.authorities.any { admin-> admin.authority == "ROLE_ADMIN" })localExistente.propietario = it else return ResponseEntity(mapOf("mensaje" to "Accion no autorizada, solos los admin pueden cambiar el propietario del local"), HttpStatus.FORBIDDEN)}
         // Guarda el usuario con el local actualizado
         localRepository.save(localExistente)
+        return ResponseEntity(mapOf("mensaje" to "local actualizado correctamente"), HttpStatus.OK)
     }
 
 }
