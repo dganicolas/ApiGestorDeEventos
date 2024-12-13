@@ -82,4 +82,23 @@ class LocalService {
         return ResponseEntity(mapOf("mensaje" to "Accion no autorizada"), HttpStatus.FORBIDDEN)
     }
 
+    fun updateLocalByName(nombre: String, local: Locales, authentication: Authentication): ResponseEntity<Map<String, String>> {
+        val localExistente = findByNombre(nombre)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Local no encontrado")
+
+        // Actualiza los campos del local existente con los valores proporcionados en 'local'
+        local.nombre?.let { localExistente.nombre = it }
+        local.tipoDeLocal?.let { localExistente.tipoDeLocal = it }
+        local.direccion?.let { localExistente.direccion = it }
+        local.descripcion?.let { localExistente.descripcion = it }
+        local.aforoMaximo?.let { localExistente.aforoMaximo = it }
+        local.precioInvitados?.let { localExistente.precioInvitados = it }
+        local.menuDisponible.let { localExistente.menuDisponible = it }
+        local.precioMenu?.let { localExistente.precioMenu = it }
+        local.descripcionMenu?.let { localExistente.descripcionMenu = it }
+        local.propietario?.let{ if(authentication.authorities.any { admin-> admin.authority == "ROLE_ADMIN" })localExistente.propietario = it else return ResponseEntity(mapOf("mensaje" to "Accion no autorizada, solos los admin pueden cambiar el propietario del local"), HttpStatus.FORBIDDEN)}
+        // Guarda el usuario con el local actualizado
+        localRepository.save(localExistente)
+    }
+
 }

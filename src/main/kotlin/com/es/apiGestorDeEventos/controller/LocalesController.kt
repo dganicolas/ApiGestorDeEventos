@@ -28,18 +28,22 @@ class LocalesController {
     fun deleteLocal(
         @PathVariable nombre: String, authentication: Authentication
     ): ResponseEntity<Any>? {
-        if(nombre == "") return ResponseEntity(mapOf("mensajes" to "el nombre no deb estar vacio"), HttpStatus.BAD_REQUEST)
+        if(nombre.isBlank()) return ResponseEntity(mapOf("mensajes" to "el nombre no debe estar vacio"), HttpStatus.BAD_REQUEST)
         return localService.eliminarLocal(nombre,authentication)
     }
-//
-//    @PutMapping("/actualizarusuario/{nombre}")
-//    fun updateUser(
-//        @PathVariable nombre: String,
-//        @RequestBody updatedUser: Usuario,
-//        authentication: Authentication
-//    ): ResponseEntity<Any>? {
-//
-//    }
+
+    @PutMapping("/actualizarlocal/{nombre}")
+    fun updateUser(
+        @PathVariable nombre: String,
+        @RequestBody local: Locales,
+        authentication: Authentication
+    ): ResponseEntity<Any>? {
+
+        if (authentication.name == nombre || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
+            localService.updateLocalByName(nombre, local,authentication)
+        }
+        return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
+    }
 //
 //    @GetMapping("/allUser")
 //    fun allUser(authentication: Authentication): ResponseEntity<Any> {
