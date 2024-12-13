@@ -10,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException
-import org.springframework.security.core.GrantedAuthority
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -90,9 +89,6 @@ class UsuarioController {
 
     @GetMapping("/alluser")
     fun allUser(authentication: Authentication): ResponseEntity<Any> {
-        if (authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
-            usuarioService.getAllUsers()
-        }
-        return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
+       return usuarioService.getAllUsers(authentication.name)
     }
 }

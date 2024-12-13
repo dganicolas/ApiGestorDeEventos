@@ -77,16 +77,21 @@ class UsuarioService : UserDetailsService {
         return ResponseEntity(mapOf("mensaje" to "Usuario actualizado correctamente"), HttpStatus.OK)
     }
 
-    fun getAllUsers(): ResponseEntity<Any> {
-        val usuarios = usuarioRepository.findAll() // Obtener todos los usuarios de la base de datos
-        if (usuarios.isEmpty()) {
-            return ResponseEntity(mapOf("mensaje" to "No hay usuarios registrados"), HttpStatus.NO_CONTENT)
-        }
+    fun getAllUsers(nombre: String): ResponseEntity<Any> {
+        val detallesUser = loadUserByUsername(nombre)
+        println(detallesUser.authorities)
+        if (detallesUser.authorities.any { it.authority == "ROLE_ADMIN" }) {
+            val usuarios = usuarioRepository.findAll() // Obtener todos los usuarios de la base de datos
+            if (usuarios.isEmpty()) {
+                return ResponseEntity(mapOf("mensaje" to "No hay usuarios registrados"), HttpStatus.NO_CONTENT)
+            }
 
-        val usuariosSinPasswords = usuarios.map { usuario ->
-            usuario.password = ""
+            val usuariosSinPasswords = usuarios.map { usuario ->
+                usuario.password = ""
+                usuario
+            }
+            return ResponseEntity(usuariosSinPasswords, HttpStatus.OK)
         }
-
-        return ResponseEntity(usuariosSinPasswords, HttpStatus.OK)
+        return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
     }
 }
