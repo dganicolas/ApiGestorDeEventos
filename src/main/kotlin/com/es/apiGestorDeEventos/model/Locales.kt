@@ -33,7 +33,7 @@ data class Locales(
 
     var precioMenu: BigDecimal? = null, // Precio del menú por persona
 
-    var descripcionMenu: String? = null, // Descripción del menú
+    var descripcionMenu: String? = null, // Descripción del menú f
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_propietario", nullable = false)
