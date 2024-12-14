@@ -39,10 +39,8 @@ data class Locales(
     @Column()
     var descripcionMenu: String? = null, // Descripción del menú f
 
-    @ManyToOne()
-    @JoinColumn(name = "id_propietario", nullable = false)
-    @JsonBackReference
-    var propietario: Usuario? = null, // Propietario del local
+    @Column(name = "id_propetario", nullable = false)
+    var propietario: Long? = null,
 
     @OneToMany(mappedBy = "local", cascade = [CascadeType.ALL], orphanRemoval = true)
     var reservas: MutableList<Reservas> = mutableListOf(), // Reservas asociadas al local

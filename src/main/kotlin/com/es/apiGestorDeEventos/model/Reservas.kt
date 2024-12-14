@@ -19,14 +19,11 @@ data class Reservas(
     @Column(nullable = false)
     var tipoDeEvento: TipoDeEvento, // Tipo de evento (Enum)
 
-    @ManyToOne()
-    @JoinColumn(name = "id_usuario", nullable = false)
-    var usuario: Usuario, // Usuario que creó la reserva
+    @Column(name = "id_cliente", nullable = false)
+    var idCliente: Long, // ID del usuario que creó la reserva
 
-    @ManyToOne()
-    @JoinColumn(name = "id_local", nullable = false)
-    @JsonBackReference
-    var local: Locales, // Local asociado a la reserva
+    @Column(name = "id_local", nullable = false)
+    var local: Long, // ID del local asociado a la reserva
 
     @Column(nullable = false)
     var totalPersonas: Int, // Número total de personas para la reserva

@@ -28,7 +28,7 @@ class UsuarioController {
     MÉTODO PARA INSERTAR UN USUARIO
      */
 
-    //funcion funciona correctamente y comprobada
+    //funcion funciona correctamente y comprobada DOCUMENTADO EN EL README
     @PostMapping("/register")
     fun register(
         @RequestBody newUsuario: Usuario
@@ -36,14 +36,14 @@ class UsuarioController {
         // Comprobación mínima
         // -> La obviamos por ahora
         if(newUsuario.password.isNullOrBlank() || newUsuario.username.isNullOrBlank()){
-            return ResponseEntity(mapOf("ERROR" to "usuario debe tener email,contraseña"),HttpStatus.BAD_REQUEST)
+            return ResponseEntity(mapOf("ERROR" to "usuario debe tener username,contraseña"),HttpStatus.BAD_REQUEST)
         }
         // Llamar al UsuarioService para insertar un usuario
         return usuarioService.registerUsuario(newUsuario)
 
     }
 
-    //metodo funcional y comprobado
+    //metodo funcional y comprobado DOCUMENTADO EN EL README
     //METODO (ENDPOINT) PARA HACER UN LOGIN
     @PostMapping("/login")
     fun login(@RequestBody usuario: Usuario):ResponseEntity<Any>?{
@@ -64,32 +64,33 @@ class UsuarioController {
         return ResponseEntity(mapOf("token" to token),HttpStatus.CREATED)
     }
 
-    //metodo funcional y comprobado
+    //metodo funcional y comprobado DOCUMENTADO EN EL README
     @DeleteMapping("/eliminarusuario/{nombre}")
     fun deleteUser(
         @PathVariable nombre: String, authentication: Authentication
     ): ResponseEntity<Any>? {
-        if (authentication.name == nombre || authentication.authorities.any { println(it); it.authority == "ROLE_ADMIN" }) {
+        if (authentication.name == nombre || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
             return usuarioService.deleteUserByUsername(nombre,authentication)
         }
             return ResponseEntity(mapOf("mensajes" to "Accion no autorizada"), HttpStatus.FORBIDDEN)
     }
 
-    //metodo funcional y comprobado
-    @PutMapping("/actualizarusuario/{nombre}")
+    //metodo funcional y comprobado Documenytado en el readme
+    @PutMapping("/actualizarusuario")
     fun updateUser(
-        @PathVariable nombre: String,
         @RequestBody updatedUser: Usuario,
         authentication: Authentication
     ): ResponseEntity<Any>? {
         // Verificar si el usuario está autorizado a actualizar sus datos
-        if (authentication.name == nombre || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
-            usuarioService.updateUserByUsername(nombre, updatedUser)
+        println(authentication.name + updatedUser.username)
+        return if (authentication.name == updatedUser.username || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
+            usuarioService.updateUserByUsername(updatedUser)
+        }else{
+            ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
         }
-        return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
     }
 
-    //metodo funcional y comprobado
+    //metodo funcional y comprobado DOCUMENTADO EN EL README
     @GetMapping("/alluser")
     fun allUser(authentication: Authentication): ResponseEntity<Any> {
        return usuarioService.getAllUsers(authentication.name)

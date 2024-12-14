@@ -19,6 +19,7 @@ class LocalService {
     @Autowired
     private lateinit var localRepository: LocalRepository
 
+
     fun crearLocal(newLocal: Locales, authentication: Authentication): ResponseEntity<Any>? {
         val propietario = usuarioService.findByUsername(authentication.name)
             ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
@@ -28,7 +29,7 @@ class LocalService {
             HttpStatus.CONFLICT
         )
 
-        if (newLocal.propietario == propietario || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
+        if (newLocal.propietario == propietario.idUsuario || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
 
             val camposErroneos = mutableListOf<String>()
 
@@ -59,7 +60,7 @@ class LocalService {
 
     fun findByNombre(nombre: String): Locales? {
         return localRepository.findByNombre(nombre).orElseThrow {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Local no encontrado")
         }
     }
 
@@ -73,36 +74,43 @@ class LocalService {
             ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
         val local =
             findByNombre(nombre) ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
+        if (local.propietario != propietario.idUsuario && !authentication.authorities.any { it.authority == "ROLE_ADMIN" }) return ResponseEntity(
+            mapOf("mensaje" to "Accion no autorizada"),
+            HttpStatus.FORBIDDEN
+        )
 
-        if (local.propietario == propietario || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
-
-            if (comprobarSiElLocalNoTieneReservas(local)) {
+        if (comprobarSiElLocalNoTieneReservas(local)) {
+            localRepository.delete(local)
+            return ResponseEntity(mapOf("mensaje" to "local eliminado"), HttpStatus.OK)
+        } else {
+            if (authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
                 localRepository.delete(local)
-                return ResponseEntity(mapOf("mensaje" to "local eliminado"), HttpStatus.NO_CONTENT)
+                return ResponseEntity(
+                    mapOf("mensaje" to "local eliminado por privilegios de admin"),
+                    HttpStatus.OK
+                )
             } else {
-                if (authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
-                    localRepository.delete(local)
-                    return ResponseEntity(
-                        mapOf("mensaje" to "local eliminado por privilegios de admin"),
-                        HttpStatus.NO_CONTENT
-                    )
-                }
                 return ResponseEntity(mapOf("mensaje" to "El local tiene reservas vigentes"), HttpStatus.CONFLICT)
             }
         }
-        return ResponseEntity(mapOf("mensaje" to "Accion no autorizada"), HttpStatus.FORBIDDEN)
+
     }
 
     fun updateLocalByName(
-        nombre: String,
         local: Locales,
         authentication: Authentication,
-    ): ResponseEntity<Map<String, String>> {
-        val localExistente = findByNombre(nombre)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Local no encontrado")
+    ): ResponseEntity<Any> {
+        val propietario = usuarioService.findByUsername(authentication.name) ?: throw ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Usuario no encontrado"
+        )
 
-        // Actualiza los campos del local existente con los valores proporcionados en 'local'
-        local.nombre?.let { localExistente.nombre = it }
+        val localExistente = local.nombre?.let { findByNombre(it) }
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Local no encontrado")
+        if (localExistente.propietario != propietario.idUsuario && !authentication.authorities.any { it.authority == "ROLE_ADMIN" }) return ResponseEntity(
+            mapOf("mensaje" to "Accion no autorizada"),
+            HttpStatus.FORBIDDEN
+        )
         local.tipoDeLocal?.let { localExistente.tipoDeLocal = it }
         local.direccion?.let { localExistente.direccion = it }
         local.descripcion?.let { localExistente.descripcion = it }
@@ -126,9 +134,9 @@ class LocalService {
     fun getAllLocal(): ResponseEntity<Any> {
         val locales = localRepository.findAll() // Obtener todos los usuarios de la base de datos
         if (locales.isEmpty()) {
-            return ResponseEntity(mapOf("mensaje" to "No hay locales registrados"), HttpStatus.NO_CONTENT)
+            return ResponseEntity(mapOf("mensaje" to "No hay locales registrados"), HttpStatus.OK)
         }
         return ResponseEntity(locales, HttpStatus.OK)
-}
+    }
 
 }

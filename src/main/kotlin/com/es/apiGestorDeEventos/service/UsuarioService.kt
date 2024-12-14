@@ -28,7 +28,8 @@ class UsuarioService : UserDetailsService {
 
     //aqui decimos como tratamos los usuarios
     override fun loadUserByUsername(username: String?): UserDetails {
-        var usuario: Usuario = usuarioRepository.findByUsername(username!!).orElseThrow()
+        var usuario: Usuario = usuarioRepository.findByUsername(username!!)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado") }
 
         return User
             .builder()
@@ -43,7 +44,6 @@ class UsuarioService : UserDetailsService {
     MÉTODO PARA INSERTAR UN USUARIO
      */
     fun registerUsuario(usuario: Usuario): ResponseEntity<Any>? {
-
 
         val newUsuario = usuario
         // Comprobamos que el usuario no existe en la base de datos
@@ -71,8 +71,8 @@ class UsuarioService : UserDetailsService {
         return ResponseEntity(mapOf("mensaje" to "Usuario eliminado"), HttpStatus.OK)
     }
 
-    fun updateUserByUsername(nombre: String, updatedUser: Usuario): ResponseEntity<Any>? {
-        val usuario = usuarioRepository.findByUsername(nombre).orElseThrow {
+    fun updateUserByUsername(updatedUser: Usuario): ResponseEntity<Any>? {
+        val usuario = usuarioRepository.findByUsername(updatedUser.username).orElseThrow {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado")
         }
         updatedUser.username?.let { nuevoUsername -> usuario.username = nuevoUsername }
@@ -85,19 +85,16 @@ class UsuarioService : UserDetailsService {
     fun getAllUsers(nombre: String): ResponseEntity<Any> {
         val detallesUser = loadUserByUsername(nombre)
         println(detallesUser.authorities)
-        if (detallesUser.authorities.any { it.authority == "ROLE_ADMIN" }) {
-            val usuarios = usuarioRepository.findAll() // Obtener todos los usuarios de la base de datos
-            if (usuarios.isEmpty()) {
-                return ResponseEntity(mapOf("mensaje" to "No hay usuarios registrados"), HttpStatus.NO_CONTENT)
-            }
-
-            val usuariosSinPasswords = usuarios.map { usuario ->
-                usuario.password = ""
-                usuario
-            }
-            return ResponseEntity(usuariosSinPasswords, HttpStatus.OK)
+        val usuarios = usuarioRepository.findAll() // Obtener todos los usuarios de la base de datos
+        if (usuarios.isEmpty()) {
+            return ResponseEntity(mapOf("mensaje" to "No hay usuarios registrados"), HttpStatus.OK)
         }
-        return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
+
+        val usuariosSinPasswords = usuarios.map { usuario ->
+            usuario.password = ""
+            usuario
+        }
+        return ResponseEntity(usuariosSinPasswords, HttpStatus.OK)
     }
 
     fun findByUsername(nombre: String): Usuario? {

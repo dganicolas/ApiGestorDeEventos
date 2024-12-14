@@ -16,33 +16,30 @@ class LocalesController {
     private lateinit var localService: LocalService
 
 
+    //DOCUMENTADO EN EL README
     @PostMapping("/register")
     fun register(
         @RequestBody newLocal: Locales,
-        authentication: Authentication
+        authentication: Authentication,
     ): ResponseEntity<Any>? {
-        return localService.crearLocal(newLocal,authentication)
+        return localService.crearLocal(newLocal, authentication)
     }
 
+    //DOCUMENTADO EN EL README
     @DeleteMapping("/eliminarlocal/{nombre}")
     fun deleteLocal(
-        @PathVariable nombre: String, authentication: Authentication
+        @PathVariable nombre: String, authentication: Authentication,
     ): ResponseEntity<Any>? {
-        if(nombre.isBlank()) return ResponseEntity(mapOf("mensajes" to "el nombre no debe estar vacio"), HttpStatus.BAD_REQUEST)
-        return localService.eliminarLocal(nombre,authentication)
+        return localService.eliminarLocal(nombre, authentication)
     }
 
-    @PutMapping("/actualizarlocal/{nombre}")
+    //DOCUMENTADO EN EL README
+    @PutMapping("/actualizarlocal")
     fun updateUser(
-        @PathVariable nombre: String,
         @RequestBody local: Locales,
-        authentication: Authentication
+        authentication: Authentication,
     ): ResponseEntity<Any>? {
-
-        if (authentication.name == nombre || authentication.authorities.any { it.authority == "ROLE_ADMIN" }) {
-            localService.updateLocalByName(nombre, local,authentication)
-        }
-        return ResponseEntity(mapOf("mensaje" to "Acción no autorizada"), HttpStatus.FORBIDDEN)
+        return localService.updateLocalByName(local, authentication)
     }
 
     @GetMapping("/alllocal")
