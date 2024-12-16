@@ -16,7 +16,7 @@ class LocalesController {
     private lateinit var localService: LocalService
 
 
-    //DOCUMENTADO EN EL README
+
     @PostMapping("/register")
     fun register(
         @RequestBody newLocal: Locales,
@@ -25,7 +25,7 @@ class LocalesController {
         return localService.crearLocal(newLocal, authentication)
     }
 
-    //DOCUMENTADO EN EL README
+
     @DeleteMapping("/eliminarlocal/{nombre}")
     fun deleteLocal(
         @PathVariable nombre: String, authentication: Authentication,
@@ -33,7 +33,7 @@ class LocalesController {
         return localService.eliminarLocal(nombre, authentication)
     }
 
-    //DOCUMENTADO EN EL README
+
     @PutMapping("/actualizarlocal")
     fun updateUser(
         @RequestBody local: Locales,

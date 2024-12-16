@@ -22,11 +22,7 @@ class UsuarioService : UserDetailsService {
 
     @Autowired
     private lateinit var passwordEncoder: PasswordEncoder
-    /*
-    TODO
-     */
 
-    //aqui decimos como tratamos los usuarios
     override fun loadUserByUsername(username: String?): UserDetails {
         var usuario: Usuario = usuarioRepository.findByUsername(username!!)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado") }
@@ -39,14 +35,9 @@ class UsuarioService : UserDetailsService {
             .build()
     }
 
-
-    /*
-    MÉTODO PARA INSERTAR UN USUARIO
-     */
     fun registerUsuario(usuario: Usuario): ResponseEntity<Any>? {
 
         val newUsuario = usuario
-        // Comprobamos que el usuario no existe en la base de datos
         if (usuarioRepository.findByUsername(newUsuario.username).isPresent) {
             return ResponseEntity(mapOf("ERROR" to "Ese nombre ya existe"), HttpStatus.BAD_REQUEST)
         }
@@ -85,7 +76,7 @@ class UsuarioService : UserDetailsService {
     fun getAllUsers(nombre: String): ResponseEntity<Any> {
         val detallesUser = loadUserByUsername(nombre)
         println(detallesUser.authorities)
-        val usuarios = usuarioRepository.findAll() // Obtener todos los usuarios de la base de datos
+        val usuarios = usuarioRepository.findAll()
         if (usuarios.isEmpty()) {
             return ResponseEntity(mapOf("mensaje" to "No hay usuarios registrados"), HttpStatus.OK)
         }
@@ -97,7 +88,7 @@ class UsuarioService : UserDetailsService {
         return ResponseEntity(usuariosSinPasswords, HttpStatus.OK)
     }
 
-    fun findByUsername(nombre: String): Usuario? {
+    fun findByUsername(nombre: String): Usuario {
         return usuarioRepository.findByUsername(nombre).orElseThrow {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado")
         }

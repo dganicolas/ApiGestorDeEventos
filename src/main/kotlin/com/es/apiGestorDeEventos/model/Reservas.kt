@@ -1,6 +1,5 @@
 package com.es.apiGestorDeEventos.model
 
-import com.fasterxml.jackson.annotation.JsonBackReference
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -10,33 +9,33 @@ import java.time.LocalDate
 data class Reservas(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var idReserva: Long? = null, // Identificador único de la reserva
+    var idReserva: Long? = null,
 
     @Column(nullable = false)
-    var diaEvento: LocalDate, // Fecha del evento (debe ser >= CURRENT_DATE)
+    var diaEvento: LocalDate?,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var tipoDeEvento: TipoDeEvento, // Tipo de evento (Enum)
+    var tipoDeEvento: TipoDeEvento?,
 
     @Column(name = "id_cliente", nullable = false)
-    var idCliente: Long, // ID del usuario que creó la reserva
+    var idCliente: Long?,
 
     @Column(name = "id_local", nullable = false)
-    var local: Long, // ID del local asociado a la reserva
+    var local: Long?,
 
     @Column(nullable = false)
-    var totalPersonas: Int, // Número total de personas para la reserva
+    var totalPersonas: Int?,
 
     @Column(nullable = false)
-    var menuIncluido: Boolean, // Indica si se incluye el menú
+    var menuIncluido: Boolean?,
 
     @Column(nullable = false)
-    var total: BigDecimal, // Total calculado de la reserva
+    var total: BigDecimal?,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var estado: EstadoReserva // Estado de la reserva (Enum)
+    var estado: EstadoReserva?
 )
 
 enum class TipoDeEvento {

@@ -22,7 +22,7 @@ class TokenService {
         val roles: String = authentication
             .authorities
             .map { it.authority }
-            .joinToString(" ")//contiene los roles del usuario
+            .joinToString(" ")
 
         val payLoad: JwtClaimsSet = JwtClaimsSet.builder()
             .issuer("self")

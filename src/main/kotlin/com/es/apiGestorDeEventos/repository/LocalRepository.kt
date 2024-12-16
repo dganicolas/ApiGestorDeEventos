@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.*
 
 interface LocalRepository : JpaRepository<Locales, Long> {
+
     fun findByNombre(nombre:String?): Optional<Locales>
 }

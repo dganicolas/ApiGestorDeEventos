@@ -1,776 +1,599 @@
-# Gestor de Reserva de Locales para Eventos
+# API REST - Gestor de Reserva de Locales para Eventos
 
-## Nombre del Proyecto
+## a. Nombre del Proyecto
 
-**Gestor de Reserva de Locales para Eventos**
+**API Gestor de Reserva de Locales para Eventos**
 
-## Idea del Proyecto
+## b. Idea del Proyecto
 
-El objetivo de este proyecto es desarrollar una API REST para gestionar las reservas de locales de eventos. Los usuarios pueden registrar sus propiedades (locales) y los clientes pueden realizar reservas para diferentes tipos de eventos, como bodas, cumpleaños o bautizos. Además, se proporcionará la opción de incluir un menú personalizado dependiendo del tipo de local, automatizando los procesos de gestión y facilitando el control por parte de los propietarios de los locales sobre sus reservas y eventos.
+La idea de este proyecto es proporcionar una API RESTful que permita gestionar eventos,
+incluyendo la creación y administración de reservas, usuarios y locales. 
+La aplicación tiene un enfoque en la seguridad, utilizando JWT para el control de acceso y asegurando 
+que solo los usuarios autorizados puedan realizar ciertas operaciones. 
+Además, se implementa un sistema de roles para gestionar los permisos de los usuarios y 
+la autenticación utilizando un cifrado asimétrico (RSA).
 
-## Justificación del Proyecto
+## c. Justificación del Proyecto
 
-Este proyecto busca mejorar la eficiencia en la gestión de reservas de locales para eventos, brindando a los propietarios una herramienta para controlar las reservas de su local, la disponibilidad para futuros eventos y la opción de ofrecer menús. De esta manera, se facilitará la administración de los eventos y el seguimiento de los clientes.
+Este proyecto tiene como objetivo ayudar a la gestión eficiente de eventos en un entorno con múltiples usuarios
+y locales. A través de la API, los administradores pueden gestionar usuarios y reservas, 
+mientras que los clientes pueden realizar reservas para eventos en los locales disponibles. 
+La justificación principal es automatizar y asegurar el proceso de reserva de eventos para ofrecer 
+una experiencia más ágil y controlada a los usuarios.
 
-## Descripción Detallada de las Tablas
+## d. Descripción detallada de las Tablas
 
+Las tablas principales que intervienen en el proyecto son:
 
----
+### 1. **Usuario**
 
+| Campo     | Tipo      | Descripción                                  |
+|-----------|-----------|----------------------------------------------|
+| `idUsuario` | `Long`    | Identificador único del usuario.            |
+| `username`  | `String`  | Nombre de usuario para autenticación.       |
+| `password`  | `String`  | Contraseña cifrada del usuario.             |
+| `roles`     | `String`  | Roles asignados al usuario (Ej. ADMIN, CLIENTE). |
 
-### Tabla `usuarios`
+### 2. **Reserva**
 
-La tabla de usuarios almacena la información de los usuarios registrados en el sistema, que incluyen tanto propietarios de locales como clientes que realizan reservas.
+| Campo         | Tipo       | Descripción                                      |
+|---------------|------------|--------------------------------------------------|
+| `idReserva`   | `Long`     | Identificador único de la reserva.              |
+| `idCliente`   | `Long`     | ID del cliente que realiza la reserva.          |
+| `local`       | `Long`     | ID del local asociado a la reserva.             |
+| `diaEvento`   | `LocalDate`| Fecha del evento.                               |
+| `totalPersonas`| `Integer` | Número de personas que asistirán al evento.     |
+| `total`       | `BigDecimal`| Total a pagar por la reserva (con o sin menú).  |
+| `estado`      | `EstadoReserva` | Estado de la reserva (Ej. PENDIENTE_DE_PAGO).  |
 
-- **id_usuario**: Identificador único (PK). Tipo: `INT`, AUTO_INCREMENT, NOT NULL.
-- **username**: Nombre de usuario. Tipo: `VARCHAR(100)`, UNIQUE, NOT NULL.
-- **password**: Contraseña hasheada. Tipo: `VARCHAR(255)`, NOT NULL.
-- **roles**: Roles asignados al usuario. Tipo: VARCHAR(255), describe el tipo de acceso como ROLE_USER o ROLE_ADMIN.
-- **locales**: Lista de locales asociados a este usuario (propietario). Relación uno a muchos con la tabla locales. Tipo: OneToMany.
-- **reservas**: Lista de reservas asociadas a este usuario (cliente). Relación uno a muchos con la tabla reservas. Tipo: OneToMany.
+### 3. **Local**
 
----
+| Campo          | Tipo       | Descripción                                      |
+|----------------|------------|--------------------------------------------------|
+| `idLocal`      | `Long`     | Identificador único del local.                  |
+| `nombre`       | `String`   | Nombre del local.                               |
+| `precioInvitados` | `BigDecimal` | Precio por invitado en el local.             |
+| `precioMenu`   | `BigDecimal` | Precio por persona si incluye menú.             |
 
+### 4. **EstadoReserva** (Enum)
 
-### Tabla `local_de_eventos`
+Este enum representa los diferentes estados de una reserva:
 
-Esta tabla gestiona los locales de eventos disponibles para reservas. Cada local está asociado a un propietario y tiene detalles específicos como el tipo de local y la posibilidad de ofrecer un menú.
-
-- **id_local**: Identificador único (PK). Tipo: `INT`, AUTO_INCREMENT, NOT NULL.
-- **nombre**: Nombre o título. Tipo: `VARCHAR(100)`, NOT NULL.
-- **tipo_de_local**: Tipo de local disponible para eventos (Bar, Salón de Celebraciones, Iglesia, Restaurante, etc.). Tipo: `ENUM`, NOT NULL.
-- **direccion**: Dirección física. Tipo: `TEXT`, NOT NULL.
-- **descripcion**: Descripción detallada. Tipo: `TEXT`.
-- **aforo_maximo**: Número máximo de invitados. Tipo: `DECIMAL(4), NOT NULL`.
-- **precio_invitados**: Precio por persona que será cobrado al cliente. Tipo: `DECIMAL(5,2), NOT NULL`.
-- **menu_disponible**: Indica si el local ofrece un menú para los eventos (BOOLEAN). Tipo: `NOT NULL`.
-- **precio_menu**: Precio del menú/persona, si el local ofrece menú. Tipo: `DECIMAL(5,2)`.
-- **descripcion_menu**: Descripción del menú disponible. Tipo: `TEXT`.
-- **id_propietario**: Identificador del propietario. Referencia a `usuarios.id_usuario`, NOT NULL.
----
-### Tabla `reservas`
-
-Esta tabla registra las reservas realizadas por los usuarios, asociando las propiedades reservadas a los eventos programados.
-
-- **id_reserva**: Identificador único (PK). Tipo: `INT`, AUTO_INCREMENT, NOT NULL.
-- **dia_evento**: Fecha del evento programado. Tipo: `DATE`, NOT NULL.
-- **tipo_de_evento**: Tipo de evento reservado (Cumpleaños, Boda, Despedida de Soltero, Bautizo, etc.). Tipo: `ENUM`, NOT NULL.
-- **id_usuario**: Identificador del usuario que realizó la reserva. Referencia a `usuarios.id_usuario`, NOT NULL.
-- **id_local**: Identificador del local reservado. Referencia a `local_de_eventos.id_local`, NOT NULL.
-- **total_personas**: Número total de personas para la reserva. Tipo: `DECIMAL(4), NOT NULL`.
-- **menu_incluido**: Indica si se incluye el menú. Tipo: `BOOLEAN`, NOT NULL.
-- **total**: Monto total de la reserva. Tipo: `DECIMAL(12,2), NOT NULL`.
-- **estado**: Estado de la reserva (Realizada, Pendiente de pago, Confirmada, Denegada). Tipo: `ENUM`, NOT NULL.
-
-
----
-
-# `CLASE: USUARIOS`
-# 1. `/usuarios/register` - Registrar Usuario
-
-### Método:
-`POST`
-
-### Descripción:
-Este endpoint permite registrar un nuevo usuario en el sistema.
-
-### Parámetros:
-- `username`: Nombre único de usuario.
-- `password`: Contraseña del usuario (será cifrada antes de almacenarse).
-
-### Cuerpo de la Solicitud:
-El cliente debe enviar un JSON con los siguientes campos como minimo:
-
-```json
-{
-  "username": "nombre_usuario",
-  "password": "contraseña_segura"
-}
-```
-
-### <span style="color: green;">Casos de éxitos:</span>
-
-1. **Usuario registrado exitosamente:**
-  - **Condición:** El `username` no existe en la base de datos y los campos `username` y `password` son válidos.
-  - **Respuesta:**  
-    Código: `201 Created`  
-    Cuerpo:
-    ```json
-    {
-     "id": 4,
-	    "username": "usuario",
-	    "password": "",
-	    "roles": "ADMIN",
-	    "locales": []
-    }
-    ```
- ![imagen de un caso de exito](src%2Fmain%2Fresources%2FCapturas%2FregisterCasoExito.png)
-
-### <span style="color: red;">Casos Fallidos:</span>
-
-1. **Campos vacíos o nulos:**
-  - **Condición:** Los campos `username` o `password` están vacíos o no se proporcionan.
-  - **Respuesta:**  
-    Código: `400 Bad Request`  
-    Cuerpo:
-    ```json
-    {
-      "ERROR": "usuario debe tener username, contraseña"
-    }
-    ```
-![imagen de un caso fallido](src%2Fmain%2Fresources%2FCapturas%2FregistercasoFallido1.png)
-
-2. **Nombre de usuario ya registrado:**
-  - **Condición:** El `username` proporcionado ya existe en la base de datos.
-  - **Respuesta:**  
-    Código: `400 Bad Request`  
-    Cuerpo:
-    ```json
-    {
-      "ERROR": "Ese nombre ya existe"
-    }
-    ```
-![registerCasoFallido2.png](src%2Fmain%2Fresources%2FCapturas%2FregisterCasoFallido2.png)
-
+- **PENDIENTE_DE_PAGO**
+- **CONFIRMADA**
+- **CANCELADA**
 
 ---
 
+## 3. Endpoints
 
-# 2. `usuarios/login` - Iniciar sesión
+### 1. **/usuarios** - Gestión de Usuarios
 
-### Método:
-`POST`
+#### `GET /usuarios`
 
-### Descripción:
-Este endpoint permite a un usuario autenticarse en el sistema y obtener un token JWT para realizar futuras solicitudes.
+Obtiene todos los usuarios registrados en el sistema. Solo accesible por administradores.
 
-### Parámetros:
-- `username`: Nombre de usuario del que intenta iniciar sesión.
-- `password`: Contraseña del usuario.
+#### `POST /register`
 
-### Cuerpo de la Solicitud:
-El cliente debe enviar un JSON con los siguientes campos:
+Crea un nuevo usuario. El usuario debe enviar un `username`, `password` y `roles`. 
+La contraseña será cifrada antes de almacenarla en la base de datos.
 
-```json
-{
-  "username": "nombre_usuario",
-  "password": "contraseña_usuario"
-}
-```
+#### `PUT /actualizarusuario`
 
-### :
+Actualiza los datos de un usuario. Solo el administrador o el propio usuario pueden modificar sus datos.
 
-### <span style="color: green;">Casos de éxitos:</span>
+#### `DELETE /usuarios/{username}`
 
-1. **Login exitoso:**
-    - **Condición:** Las credenciales proporcionadas (username y password) son correctas y coinciden con un usuario registrado.
-    - **Respuesta:**  
-      Código: 201 Created  
-      Cuerpo:
-
-```json
-{
-  "token": "aqui-va-tu-token-jwt"
-}
-```
-![imagen de un caso de exito](src%2Fmain%2Fresources%2FCapturas%2FloginCasoExito.png)
-
-### <span style="color: red;">Casos Fallidos:</span>
-
-1. **Credenciales incorrectas:**
-    - **Condición:** Las credenciales proporcionadas (username y password) no coinciden con los registros de la base de datos.
-    - **Respuesta:**  
-      Código: 401 Unauthorized  
-      Cuerpo:
-
-```json
-{
-  "mensajes": "Credenciales incorrectas dude"
-}
-```
-
-![imagen de un caso fallido](src%2Fmain%2Fresources%2FCapturas%2FloginCasoFallido.png)
-
+Elimina un usuario del sistema. Solo el administrador o el propio usuario pueden eliminar su cuenta.
 
 ---
 
+### 2. **/reservas** - Gestión de Reservas
 
-# 3. `/eliminarusuario/{nombre}` - Eliminar Usuario
+#### `GET /reservas/tusreservas`
 
-### Método:
-`DELETE`
+Obtiene todas las reservas asociadas al usuario autenticado.
 
-### Descripción:
-Este endpoint permite eliminar un usuario del sistema. Solo el usuario autenticado con el nombre correspondiente o un administrador puede realizar esta acción.
+#### `POST /reservas/register`
 
-### Parámetros:
-- nombre: El nombre de usuario del usuario que se desea eliminar.
-- authentication: El token de autenticación del usuario que realiza la solicitud.
+Crea una nueva reserva. Requiere información sobre el cliente, local, fecha, número de personas, y si se incluirá menú. Solo accesible por usuarios autenticados.
 
-### Cuerpo de la Solicitud:
-No se requiere cuerpo de la solicitud para este endpoint.
+#### `DELETE /reservas/eliminarReserva/{id}`
 
-
-
-### <span style="color: green;">Casos de éxitos:</span>
-1. **Usuario eliminado exitosamente por un administrador:**
-    - **Condición:** Un usuario administrador elimina a otro usuario.
-    - **Respuesta:**  
-      Código: 200 OK  
-      Cuerpo:
-
-```json
-{
-  "mensaje": "Usuario eliminado"
-}
-```
-![eliminarUsuarioCasoDeExitoAdmin.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarUsuarioCasoDeExitoAdmin.png)
-
-2. **Usuario eliminado exitosamente por el mismo usuario autenticado:**
-    - **Condición:** El usuario autenticado elimina su propio usuario.
-    - **Respuesta:**  
-      Código: 401 Unauthorized  
-      Cuerpo:
-
-```json
-{
-  "mensaje": "Usuario eliminado. Su sesión se ha cerrado."
-}
-```
-
-![imagen de un caso de exito](src%2Fmain%2Fresources%2FCapturas%2FeliminarUsuarioCasoExito.png)
-
-### <span style="color: red;">Casos Fallidos:</span>
-
-1. **Acción no autorizada:**
-    - **Condición:** El usuario autenticado no tiene permisos para eliminar al usuario especificado (ni es el mismo usuario ni un administrador).
-    - **Respuesta:**  
-      Código: 403 Forbidden  
-      Cuerpo:
-
-```json
-{
-  "mensajes": "Acción no autorizada"
-}
-```
-
-![imagen de un caso fallido](src%2Fmain%2Fresources%2FCapturas%2FeliminarUsuarioCasoFallido.png)
+Elimina una reserva por ID. Solo accesible por el propietario de la reserva o un administrador.
 
 ---
 
+### 3. **/locales** - Gestión de Locales
 
-# 4. `/actualizarusuario` - Actualizar Usuario
+#### `GET /locales`
 
-### Método:
-`PUT`
+Obtiene todos los locales disponibles.
 
-### Descripción:
-Este endpoint permite actualizar los datos de un usuario en el sistema. Solo el usuario autenticado con el nombre correspondiente o un administrador puede realizar esta acción.
+#### `POST /locales/register`
 
-### Parámetros:
-- `updatedUser`: El objeto con los datos que se desean actualizar (username, password, roles).
-- `authentication`: El token de autenticación del usuario que realiza la solicitud.
+Crea un nuevo local. Requiere el nombre del local, el precio por invitado y el precio del menú si aplica.
 
-### Cuerpo de la Solicitud:
-El cliente debe enviar un JSON con los campos que desea actualizar. Al menos uno de los siguientes campos debe estar presente:
+#### `PUT /locales/actualizarlocal`
 
-```json
-{
-  "username": "nuevo_nombre_usuario",
-  "password": "nueva_contraseña_segura",
-  "roles": ["ROLE_USER", "ROLE_ADMIN"]
-}
-```
+Actualiza los datos de un local. Solo accesible por el propietario del local o un administrador.
 
-### <span style="color: green;">Casos de éxitos:</span>
-1. **Usuario actualizado correctamente:**
-    - **Condición:** El usuario autenticado actualiza sus propios datos o un administrador actualiza los datos de otro usuario.
-    - **Respuesta:**  
-      Código: 200 OK  
-      Cuerpo:
+#### `DELETE /locales/eliminarlocal/{nombre}`
 
-```json
-{
-  "mensaje": "Usuario actualizado correctamente"
-}
-```
-
-![imagen de un caso de exito](src%2Fmain%2Fresources%2FCapturas%2FactualizarUsuarioCasoExito.png)
-
-### <span style="color: red;">Casos Fallidos:</span>
-1. **Acción no autorizada:**
-    - **Condición:** El usuario autenticado no tiene permisos para actualizar los datos del usuario especificado (ni es el mismo usuario ni un administrador).
-    - **Respuesta:**  
-      Código: 403 Forbidden  
-      Cuerpo:
-
-```json
-{
-  "mensaje": "Acción no autorizada"
-}
-```
-
-![imagen de un caso fallido](src%2Fmain%2Fresources%2FCapturas%2FactualizarUsuarioCasoFallido.png)
-
+Elimina un local del sistema. Solo accesible por el propietario del local o un administrador.
 
 ---
 
+## 4. Lógica de Negocio
 
-# 5. `/usuarios/alluser` - Obtener Todos los Usuarios
+La lógica de negocio en la aplicación se centra en:
 
-### Método:
-`GET`
+1. **Reserva de Eventos**: 
+Los usuarios pueden crear reservas para eventos en locales disponibles. 
+La fecha de la reserva debe ser posterior a la fecha actual, 
+y la misma fecha no puede estar ocupada en el mismo local.
 
-### Descripción:
-Este endpoint permite a un usuario con rol de administrador obtener la lista de todos los usuarios registrados en el sistema, excluyendo las contraseñas. Solo los administradores pueden acceder a este recurso.
+2. **Gestión de Usuarios**: 
+Los administradores pueden gestionar usuarios, incluyendo la creación, actualización y eliminación. 
+Los roles asignados a los usuarios determinan los permisos para acceder a ciertos endpoints.
 
-### Parámetros:
-- `authentication`: El token de autenticación del usuario que realiza la solicitud.
+3. **Cálculo del Total de la Reserva**: 
+El costo total de la reserva se calcula según el número de personas, el precio por invitado del local y, 
+si aplica, el precio del menú.
 
-### Cuerpo de la Solicitud:
-No se requiere cuerpo de la solicitud para este endpoint.
+---
 
+## 5. Excepciones y Códigos de Estado
 
-### <span style="color: green;">Casos de éxitos:</span>
-1. **Lista de usuarios obtenida exitosamente:**
-    - **Condición:** El usuario autenticado es un administrador y hay usuarios registrados en el sistema.
-    - **Respuesta:**  
-      Código: 200 OK  
-      Cuerpo:
+### Excepciones:
 
-```json
-[
+1. **404 Not Found**: Cuando un recurso no es encontrado (usuario, reserva, local).
+2. **400 Bad Request**: Cuando los datos enviados por el cliente son incorrectos o faltantes.
+3. **401 Unauthorized**: Cuando el usuario no está autenticado.
+4. **403 Forbidden**: Cuando el usuario no tiene permisos suficientes para realizar la acción.
+5. **500 Internal Server Error**: Cuando ocurre un error inesperado en el servidor.
+6. **409 Conflict**: Cuando la solicitud entra en conflicto con el estado actual del recurso (por ejemplo, nombre de local duplicado o reservas vigentes que impiden una acción).
+
+### Códigos de Estado:
+
+- `200 OK`: Operación exitosa.
+- `201 Created`: Recurso creado exitosamente.
+- `400 Bad Request`: Error en la solicitud.
+- `401 Unauthorized`: El usuario no está autenticado.
+- `403 Forbidden`: El usuario no tiene permiso para acceder al recurso.
+- `404 Not Found`: El recurso no fue encontrado.
+- `409 Conflict`: Conflicto con el estado del recurso
+- `500 Internal Server Error`: Error en el servidor.
+- 
+
+---
+
+## 6. Restricciones de Seguridad
+
+- **Autenticación**: 
+La aplicación usa **JWT** para la autenticación de usuarios. 
+Cada vez que un usuario inicia sesión, se genera un token JWT firmado con clave pública y privada. 
+Este token debe ser incluido en los encabezados de las solicitudes para acceder a los endpoints protegidos.
+
+- **Roles**: 
+Los usuarios tienen roles asignados que determinan su nivel de acceso a los recursos. 
+Los administradores tienen acceso completo, mientras que los usuarios normales 
+tienen acceso limitado a sus propias reservas.
+
+- **Cifrado Asimétrico**: 
+La autenticación utiliza un sistema de cifrado asimétrico mediante 
+claves públicas y privadas (RSA) para garantizar la seguridad de las credenciales.
+
+---
+
+## Implementación de la API
+La implementación de la API está basada en Spring Boot y utiliza Spring Security
+para la autenticación y autorización. 
+La gestión de usuarios, locales y reservas se realiza a través de servicios 
+específicos, mientras que la generación de tokens se maneja mediante un 
+servicio dedicado (TokenService).
+---
+## Pruebas de la API
+Las pruebas del funcionamiento de la API se 
+realizarán utilizando Insomnia para asegurar que todos 
+los endpoints se comportan correctamente según lo esperado.
+---
+### Plan de Pruebas
+
+### **Pruebas de Endpoints**
+
+#### 1. **Pruebas de Endpoint `POST /usuarios/register`**
+
+- **Prueba 1**: Registrar un usuario con `username` y `password` válidos.
+    - **Entrada**: JSON con un `username` y `password`.
+    - **Esperado**:
+        - Código: `201 Created`.
+        - Respuesta: Objeto JSON del usuario creado (sin incluir el campo `password`).
+    - **Resultado esperado**: Respuesta con el usuario creado.
+    - ![registerCasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FregisterCasoExito.png)
+- **Prueba 2**: Intentar registrar un usuario sin `username` o `password`.
+    - **Entrada**: JSON incompleto (por ejemplo, sin `username` o sin `password`).
+    - **Esperado**:
+        - Código: `400 Bad Request`.
+        - Respuesta: `{"ERROR": "usuario debe tener username,contraseña"}`.
+    - **Resultado esperado**: Respuesta con mensaje de error.
+    - ![registercasoFallido1.png](src%2Fmain%2Fresources%2FCapturas%2FregistercasoFallido1.png)
+- **Prueba 3**: Intentar registrar un usuario con un `username` que ya existe.
+    - **Entrada**: JSON con un `username` ya registrado.
+    - **Esperado**:
+        - Código: `400 Bad Request`.
+        - Respuesta: `{"ERROR": "Ese nombre ya existe"}`.
+    - **Resultado esperado**: Respuesta con mensaje de error.
+    - ![registerCasoFallido2.png](src%2Fmain%2Fresources%2FCapturas%2FregisterCasoFallido2.png)
+---
+
+#### 2. **Pruebas de Endpoint `POST /usuarios/login`**
+
+- **Prueba 1**: Hacer login con credenciales correctas.
+    - **Entrada**: JSON con `username` y `password` correctos.
+    - **Esperado**:
+        - Código: `201 Created`.
+        - Respuesta: `{"token": "<JWT_TOKEN>"}` (un token válido generado).
+    - **Resultado esperado**: Respuesta con el token JWT.
+    - ![loginCasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FloginCasoExito.png)
+
+- **Prueba 2**: Intentar login con credenciales incorrectas.
+    - **Entrada**: JSON con `username` o `password` incorrectos.
+    - **Esperado**:
+        - Código: `401 Unauthorized`.
+        - Respuesta: `{"mensajes": "Credenciales incorrecta dude"}`.
+    - **Resultado esperado**: Respuesta con mensaje de error.
+    - ![loginCasoFallido.png](src%2Fmain%2Fresources%2FCapturas%2FloginCasoFallido.png)
+
+---
+
+#### 3. **Pruebas de Endpoint `DELETE /usuarios/eliminarusuario/{nombre}`**
+
+- **Prueba 1**: Eliminar un usuario autenticado.
+    - **Entrada**: Usuario autenticado que coincide con el `nombre` o tiene rol `ROLE_ADMIN`.
+    - **Esperado**:
+        - Código:
+            - `200 OK` si el usuario es eliminado.
+            - `401 Unauthorized` si el usuario elimina su propia cuenta.
+        - Respuesta:
+            - `{"mensaje": "Usuario eliminado"}`.
+            - `{"mensaje": "Usuario eliminado. Su sesión se ha cerrado."}`.
+    - **Resultado esperado**: Respuesta adecuada según el caso.
+    - ![eliminarUsuarioCasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarUsuarioCasoExito.png)
+    - ![eliminarUsuarioCasoDeExitoAdmin.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarUsuarioCasoDeExitoAdmin.png)
+- **Prueba 2**: Intentar eliminar un usuario sin permisos.
+    - **Entrada**: Usuario autenticado pero sin permisos de administrador o que no coincide con el `nombre`.
+    - **Esperado**:
+        - Código: `403 Forbidden`.
+        - Respuesta: `{"mensajes": "Accion no autorizada"}`.
+    - **Resultado esperado**: Respuesta con mensaje de error.
+    - ![eliminarUsuarioCasoFallido.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarUsuarioCasoFallido.png)
+
+- **Prueba 3**: Intentar eliminar un usuario inexistente.
+    - **Entrada**: `nombre` de un usuario no registrado.
+    - **Esperado**:
+        - Código: `404 Not Found`.
+        - Respuesta: `{"mensaje": "Usuario no encontrado"}`.
+    - **Resultado esperado**: Respuesta con mensaje de error.
+    - ![eliminarUsaurioCasoFallido2.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarUsaurioCasoFallido2.png)
+
+### 4. **Pruebas de Endpoint PUT `/usuarios/actualizarusuario`**
+
+#### **Prueba 1**: Actualizar los datos del usuario con credenciales correctas.
+- **Descripción**: Un usuario autenticado actualiza su password.
+- **Entrada**:
+  ```json
   {
-    "id": 1,
-    "username": "usuario1",
-    "password": "",
-    "roles": ["ROLE_USER"],
-    "locales": []
-  },
-  {
-    "id": 2,
-    "username": "usuario2",
-    "password": "",
-    "roles": ["ROLE_USER"],
-    "locales": []
+      "username": "usuario",
+      "password": "nuevaPassword"
   }
-]
-```
-![allUserCasoDeExito.png](src%2Fmain%2Fresources%2FCapturas%2FallUserCasoDeExito.png)
-2. **No hay usuarios registrados:**
-    - **Condición:** El usuario autenticado es un administrador, pero no hay usuarios registrados en el sistema.
-    - **Respuesta:**  
-      Código: 200 OK  
-      Cuerpo:
-
-```json
-{
-  "mensaje": "No hay usuarios registrados"
-}
-```
-
-![imagen de un caso de exito](src%2Fmain%2Fresources%2FCapturas%2FtodosUsuariosCasoExito.png)
-
-### <span style="color: red;">Casos Fallidos:</span>
-1. **Acción no autorizada:**
-    - **Condición:** El usuario autenticado no tiene el rol de administrador.
-    - **Respuesta:**  
-      Código: 403 Forbidden
-
-![imagen de un caso fallido](src%2Fmain%2Fresources%2FCapturas%2FtodosUsuariosCasoFallido.png)
-
-
----
-
-# `CLASE: LOCALES`
-# 1. `/locales/register` - Registrar Local
-
-### Método:
-`POST`
-
-### Descripción:
-Este endpoint permite registrar un nuevo local en el sistema. Solo el propietario del local o un administrador puede realizar esta acción.
-
-### Parámetros:
-- `newLocal`: El objeto `Locales` que contiene la información del nuevo local.
-- `authentication`: El token de autenticación del usuario que realiza la solicitud.
-
-### Cuerpo de la Solicitud:
-El cliente debe enviar un JSON con los siguientes campos mínimos:
-
-```json
-{
-  "nombre": "nombre_local",
-  "tipoDeLocal": "RESTAURANTE",
-  "direccion": "Calle ejemplo 123",
-  "descripcion": "Descripción breve del local",
-  "aforoMaximo": 100,
-  "precioInvitados": 50.00,
-  "menuDisponible": true,
-  "precioMenu": 25.50,
-  "descripcionMenu": "Menú dos platos y un postre",
-  "propietario": 1
-}
-```
-
-### :
-
-### <span style="color: green;">Casos de éxitos:</span>
-1. **Local creado correctamente:**
-   - **Condición:** El propietario es el usuario autenticado o el usuario tiene rol de administrador, y todos los campos necesarios son válidos.
-   - **Respuesta:**  
-     Código: 201 Created  
-     Cuerpo:
-
-```json
-{
-  "mensaje": "Local creado correctamente"
-}
-```
-
-![imagen de un caso de exito](src%2Fmain%2Fresources%2FCapturas%2FcrearLocalCasoExito.png)
-
-### <span style="color: red;">Casos Fallidos:</span>
-1. **Nombre de local ya registrado:**
-   - **Condición:** El nombre del local proporcionado ya existe en la base de datos.
-   - **Respuesta:**  
-     Código: 409 Conflict  
-     Cuerpo:
-
-```json
-{
-  "mensaje": "El nombre del local ya existe"
-}
-```
-![crearLoclaCasoFallido1.png](src%2Fmain%2Fresources%2FCapturas%2FcrearLoclaCasoFallido1.png)
-2. **Campos inválidos o faltantes:**
-   - **Condición:** Los campos necesarios para la creación del local están vacíos, nulos o no válidos (como aforo máximo negativo, precio de menú inválido, etc.).
-   - **Respuesta:**  
-     Código: 400 Bad Request  
-     Cuerpo:
-
-```json
-{
-  "Error": "Campos inválidos o faltantes: nombre, tipo de local"
-}
-```
-![crearLocalCasoFallido2.png](src%2Fmain%2Fresources%2FCapturas%2FcrearLocalCasoFallido2.png)
-3. **Acción no autorizada:**
-   - **Condición:** El usuario autenticado no es el propietario del local ni tiene rol de administrador.
-   - **Respuesta:**  
-     Código: 403 Forbidden  
-     Cuerpo:
-
-```json
-{
-  "mensaje": "Accion no autorizada"
-}
-```
-
-![imagen de un caso fallido](src%2Fmain%2Fresources%2FCapturas%2FcrearLocalCasoFallido.png)
-
-Aquí tienes la documentación para el endpoint `/locales/eliminarlocal/{nombre}`, siguiendo el formato solicitado:
-
----
-
-# 2. `/locales/eliminarlocal/{nombre}` - Eliminar Local
-
-### Método:
-`DELETE`
-
-### Descripción:
-Este endpoint permite eliminar un local del sistema. Solo el propietario del local o un administrador puede realizar esta acción. Si el local tiene reservas vigentes, solo un administrador podrá eliminarlo.
-
-### Parámetros:
-- `nombre`: El nombre del local que se desea eliminar.
-- `authentication`: El token de autenticación del usuario que realiza la solicitud.
-
-### Cuerpo de la Solicitud:
-No es necesario incluir un cuerpo en la solicitud para este endpoint.
-
-### :
-
-### <span style="color: green;">Casos de éxitos:</span>
-1. **Local eliminado correctamente:**
-   - **Condición:** El usuario autenticado es el propietario del local o tiene rol de administrador, y el local no tiene reservas vigentes.
-   - **Respuesta:**  
-     Código: 200 OK  
-     Cuerpo:
-
-```json
-{
-  "mensaje": "local eliminado"
-}
-```
-![eliminarocalCasoExtio.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarocalCasoExtio.png)
-2. **Local eliminado por privilegios de administrador:**
-   - **Condición:** El usuario autenticado es un administrador y el local tiene reservas vigentes.
-   - **Respuesta:**  
-     Código: 200 OK 
-     Cuerpo:
-
-```json
-{
-  "mensaje": "local eliminado por privilegios de admin"
-}
-```
-![eliminarLoclaCasoAdminExito.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarLoclaCasoAdminExito.png)
-### <span style="color: red;">Casos Fallidos:</span>
-1. **Local no encontrado:**
-   - **Condición:** El local con el nombre proporcionado no existe en la base de datos.
-   - **Respuesta:**  
-     Código: 404 Not Found  
-     Cuerpo:
-
-```json
-{
-  "mensaje": "Local no existe"
-}
-```
-![eliminarlocalcasofallido2.png](src%2Fmain%2Fresources%2FCapturas%2Feliminarlocalcasofallido2.png)
-2. **Acción no autorizada:**
-   - **Condición:** El usuario autenticado no es el propietario del local ni tiene rol de administrador.
-   - **Respuesta:**  
-     Código: 403 Forbidden  
-     Cuerpo:
-
-```json
-{
-  "mensaje": "Accion no autorizada"
-}
-```
-![eliminarLoclaCasoFallido1.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarLoclaCasoFallido1.png)
-3. **El local tiene reservas vigentes:**
-   - **Condición:** El local tiene reservas activas y no es un administrador el que está intentando eliminarlo.
-   - **Respuesta:**  
-     Código: 409 Conflict  
-     Cuerpo:
-
-```json
-{
-  "mensaje": "El local tiene reservas vigentes"
-}
-```
-
-![eliminarLocalCasoFallido.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarLocalCasoFallido.png)
-
-
-Aquí tienes la documentación para el endpoint `/locales/actualizarlocal` actualizado:
-
-
----
-
-
-Aquí tienes la documentación del endpoint actualizada para reflejar que el nombre del local no se puede modificar:
-
----
-
-# 3. `/locales/actualizarlocal` - Actualizar Local
-
-### Método:
-`PUT`
-
-### Descripción:
-Este endpoint permite actualizar los datos de un local existente, excepto el nombre del local, ya que es inmutable. Solo el propietario del local o un administrador tiene permiso para realizar esta acción. Además, cambiar el propietario del local está restringido únicamente a usuarios con rol de administrador.
-
----
-
-### Parámetros:
-
-#### Cuerpo de la Solicitud (*JSON*):
-Debe incluir el nombre del local (como referencia) y los campos que se deseen actualizar. Los campos que no se incluyan permanecerán sin cambios.
-
-```json
-{
-  "nombre": "string (obligatorio, solo como referencia, no se puede modificar)",
-  "tipoDeLocal": "enum (BAR, VENTA, SALON_DE_CELEBRACIONES, IGLESIA, RESTAURANTE)",
-  "direccion": "string",
-  "descripcion": "string",
-  "aforoMaximo": "integer",
-  "precioInvitados": "number",
-  "menuDisponible": "boolean",
-  "precioMenu": "number",
-  "descripcionMenu": "string",
-  "propietario": "long (opcional, solo admins pueden cambiarlo)"
-}
-```
-
----
-
-### Respuestas:
-
-#### Éxito:
-1. **Local actualizado correctamente:**
-    - **Condición:** El usuario autenticado es el propietario del local o un administrador, y los datos proporcionados son válidos.
-    - **Respuesta:**  
-      Código: 200 OK  
-      Cuerpo:
+  ```
+- **Esperado**:
+    - Código: 200 OK.
+    - Respuesta:
       ```json
       {
-        "mensaje": "local actualizado correctamente"
+          "mensaje": "Usuario actualizado correctamente"
       }
-      ```  
-![actualizarLocalcasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FactualizarLocalcasoExito.png)
----
-
-#### Errores:
-1. **Acción no autorizada:**
-    - **Condición:** El usuario autenticado no es el propietario del local ni tiene rol de administrador.
-    - **Respuesta:**  
-      Código: 403 Forbidden  
-      Cuerpo:
-      ```json
-      {
-        "mensaje": "Accion no autorizada"
-      }
-      ```  
-![actualizarLoclaCasoFallo1.png](src%2Fmain%2Fresources%2FCapturas%2FactualizarLoclaCasoFallo1.png)
-2. **Usuario no encontrado:**
-    - **Condición:** El usuario autenticado no existe en el sistema.
-    - **Respuesta:**  
-      Código: 404 Not Found  
-      Cuerpo:
-      ```json
-      {
-        "mensaje": "Usuario no encontrado"
-      }
-      ```  
-No puedo llegar a ser este caso, por que todos los token son ususarios, que estan en el sistemas, pero lo tengo por si acaso :D
-3. **Local no encontrado:**
-    - **Condición:** El local con el nombre proporcionado no existe en el sistema.
-    - **Respuesta:**  
-      Código: 404 Not Found  
-      Cuerpo:
-      ```json
-      {
-        "mensaje": "Local no encontrado"
-      }
-      ```  
-![actualizarlocalCasoFallo2.png](src%2Fmain%2Fresources%2FCapturas%2FactualizarlocalCasoFallo2.png)
-4. **Intento de cambiar el propietario sin ser administrador:**
-    - **Condición:** El usuario autenticado intenta cambiar el propietario del local, pero no tiene rol de administrador.
-    - **Respuesta:**  
-      Código: 403 Forbidden  
-      Cuerpo:
-      ```json
-      {
-        "mensaje": "Accion no autorizada, solos los admin pueden cambiar el propietario del local"
-      }
-      ```  
-![actualizarlocalCasoFallo4.png](src%2Fmain%2Fresources%2FCapturas%2FactualizarlocalCasoFallo4.png)
-
-Aquí tienes la documentación para el endpoint `GET /alllocal`:
+      ```
+- **Resultado esperado**: El username y/o password del usuario se actualizan correctamente en la base de datos.
+- **Captura**:  
+  ![actualizarUsuarioCasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FactualizarUsuarioCasoExito.png)
 
 ---
 
-# 4. `/locales/alllocal` - Listar Todos los Locales
-
-### Método:
-`GET`
-
-### Descripción:
-Este endpoint permite obtener una lista de todos los locales registrados en el sistema. Si no hay locales registrados, se devuelve un mensaje indicando la ausencia de datos.
-
----
-
-### Parámetros:
-Este endpoint no requiere parámetros adicionales.
-
----
-
-### Cuerpo de la Solicitud:
-N/A
-
----
-
-### <span style="color: green;">Casos de Éxito:</span>
-1. **Locales obtenidos exitosamente:**
-    - **Condición:** Hay locales registrados en la base de datos.
-    - **Respuesta:**  
-      Código: 200 OK  
-      Cuerpo:
-
-```json
-[
+#### **Prueba 2**: Intentar actualizar otro usuario sin permisos de administrador.
+- **Descripción**: Un usuario intenta actualizar los datos de otro usuario sin tener el rol `ROLE_ADMIN`.
+- **Entrada**:
+  ```json
   {
-    "id": 1,
-    "nombre": "RestauranteCentral",
-    "tipoDeLocal": "RESTAURANTE",
-    "direccion": "Calle Nueva 123",
-    "descripcion": "Restaurante moderno",
-    "aforoMaximo": 100,
-    "precioInvitados": 50.0,
-    "menuDisponible": true,
-    "precioMenu": 30.0,
-    "descripcionMenu": "Menú de 3 platos",
-    "propietario": 3
-  },
-  {
-    "id": 2,
-    "nombre": "BarLosAmigos",
-    "tipoDeLocal": "BAR",
-    "direccion": "Calle Vieja 456",
-    "descripcion": "Bar acogedor",
-    "aforoMaximo": 50,
-    "precioInvitados": 20.0,
-    "menuDisponible": false,
-    "precioMenu": null,
-    "descripcionMenu": null,
-    "propietario": 5
+      "username": "otroUsuario",
+      "password": "nuevaPassword"
   }
-]
-```
-![casoExitoAllLocal.png](src%2Fmain%2Fresources%2FCapturas%2FcasoExitoAllLocal.png)
+  ```
+- **Esperado**:
+    - Código: 403 Forbidden.
+    - Respuesta:
+      ```json
+      {
+          "mensaje": "Acción no autorizada"
+      }
+      ```
+- **Resultado esperado**: La operación es denegada y no se realizan cambios en la base de datos.
+- **Captura**:  
+  ![actualizarUsuarioCasoFallido.png](src%2Fmain%2Fresources%2FCapturas%2FactualizarUsuarioCasoFallido.png)
 
 ---
 
-### <span style="color: red;">Casos Fallidos:</span>
-1. **No hay locales registrados:**
-    - **Condición:** No existen registros de locales en la base de datos.
-    - **Respuesta:**  
-      Código: 200 OK  
-      Cuerpo:
-
-```json
-{
-  "mensaje": "No hay locales registrados"
-}
-```
+#### **Prueba 3**: Intentar actualizar un usuario que no existe.
+- **Descripción**: Se intenta actualizar un usuario con un username no registrado en la base de datos.
+- **Entrada**:
+  ```json
+  {
+      "username": "usuarioInexistente",
+      "password": "nuevaPassword"
+  }
+  ```
+- **Esperado**:
+    - Código: 404 Not Found.
+    - Respuesta:
+      ```json
+      {
+          "mensaje": "Usuario no encontrado"
+      }
+      ```
+- **Resultado esperado**: La operación falla con un mensaje de error indicando que el usuario no existe.
+- **Captura**:  
+  ![actUsuaCasoFallido.png](src%2Fmain%2Fresources%2FCapturas%2FactUsuaCasoFallido.png)
 
 ---
 
+### 5. **Pruebas de Endpoint `POST /locales/register`**
 
-## Lógica de Negocio
+- **Prueba 1**: Crear un local con datos válidos.
+    - **Entrada**: JSON con los campos obligatorios (`nombre`, `tipoDeLocal`, `direccion`, etc.).
+    - **Esperado**:
+        - Código: `201 Created`.
+        - Respuesta: `{"mensaje": "Local creado correctamente"}`.
+    - **Resultado esperado**: Creación exitosa del local.
+    - ![crearLocalCasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FcrearLocalCasoExito.png)
 
-La aplicación gestionará las siguientes funcionalidades principales:
-- Registro y login de usuarios.
-- Gestión de locales para eventos, permitiendo a los propietarios registrar sus locales y establecer características como tipo de evento, menú disponible y capacidad.
-- Reservas de eventos, donde los usuarios pueden seleccionar un local, definir el tipo de evento y el número de personas, y calcular automáticamente el precio total.
-- Eliminación de usuarios, con controles de seguridad para asegurar que solo los administradores o el propio usuario puedan eliminar su cuenta.
+- **Prueba 2**: Crear un local con campos inválidos o faltantes.
+    - **Entrada**: JSON incompleto o con valores no válidos (por ejemplo, `aforoMaximo` <= 0).
+    - **Esperado**:
+        - Código: `400 Bad Request`.
+        - Respuesta: `{"Error": "Campos inválidos o faltantes: <lista de campos>"}`.
+    - **Resultado esperado**: Error con lista de campos inválidos.
+    - ![crearLocalCasoFallido2.png](src%2Fmain%2Fresources%2FCapturas%2FcrearLocalCasoFallido2.png)
 
-## Excepciones y Códigos de Estado
+- **Prueba 3**: Crear un local con un nombre ya existente.
+    - **Entrada**: JSON con un `nombre` ya registrado.
+    - **Esperado**:
+        - Código: `409 Conflict`.
+        - Respuesta: `{"mensaje": "El nombre del local ya existe"}`.
+    - **Resultado esperado**: Error indicando que el nombre ya está registrado.
+    - ![crearLoclaCasoFallido1.png](src%2Fmain%2Fresources%2FCapturas%2FcrearLoclaCasoFallido1.png)
 
-Las excepciones generadas por la API y sus códigos de estado incluyen:
+---
 
-- **400 Bad Request**: Cuando los parámetros proporcionados son incorrectos o incompletos.
-- **401 Unauthorized**: Cuando las credenciales de un usuario no son válidas.
-- **403 Forbidden**: Cuando un usuario intenta realizar una acción para la cual no tiene permisos (por ejemplo, eliminar otro usuario sin ser administrador).
-- **404 Not Found**: Cuando no se encuentra un recurso solicitado.
-- **500 Internal Server Error**: Cuando ocurre un error inesperado en el servidor.
+### 6. **Pruebas de Endpoint `DELETE /locales/eliminarlocal/{nombre}`**
 
-## Restricciones de Seguridad
+- **Prueba 1**: Eliminar un local con reservas vigentes sin permisos de administrador.
+    - **Entrada**: Nombre del local con reservas activas.
+    - **Esperado**:
+        - Código: `409 Conflict`.
+        - Respuesta: `{"mensaje": "El local tiene reservas vigentes"}`.
+    - **Resultado esperado**: No se elimina el local.
+    - ![eliminarLocalCasoFallido.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarLocalCasoFallido.png)
 
-Se aplicarán las siguientes restricciones de seguridad en la API:
-- **Autenticación mediante JWT**: Los endpoints que requieren acceso restringido serán protegidos mediante un token JWT, el cual se debe enviar en los encabezados de la solicitud.
-- **Autorización por roles**: Algunos endpoints solo estarán disponibles para administradores. Otros estarán disponibles para usuarios comunes.
-- **Cifrado de Contraseñas**: Las contraseñas de los usuarios se almacenarán cifradas en la base de datos.
+- **Prueba 2**: Eliminar un local como administrador, ignorando reservas.
+    - **Entrada**: Nombre del local a eliminar.
+    - **Esperado**:
+        - Código: `200 OK`.
+        - Respuesta: `{"mensaje": "local eliminado por privilegios de admin"}`.
+    - **Resultado esperado**: El local es eliminado con éxito.
+    - ![eliminarLoclaCasoAdminExito.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarLoclaCasoAdminExito.png)
 
-## Repositorio de GitHub
+- **Prueba 3**: Eliminar un local inexistente.
+    - **Entrada**: Nombre de un local no registrado.
+    - **Esperado**:
+        - Código: `404 Not Found`.
+        - Respuesta: `{"mensaje": "Usuario no existe"}`.
+    - **Resultado esperado**: Error indicando que el local no se encontró.
+    - ![eliminarlocalcasofallido2.png](src%2Fmain%2Fresources%2FCapturas%2Feliminarlocalcasofallido2.png)
 
-El código fuente de este proyecto estará disponible en el repositorio de GitHub:
+---
 
-[https://github.com/dganicolas/ApiGestorDeEventos](https://github.com/dganicolas/ApiGestorDeEventos)
+### 7. **Pruebas de Endpoint `PUT /locales/actualizarlocal`**
 
-## Conclusión
+- **Prueba 1**: Actualizar datos de un local válido.
+    - **Entrada**: JSON con datos nuevos y válidos.
+    - **Esperado**:
+        - Código: `200 OK`.
+        - Respuesta: `{"mensaje": "local actualizado correctamente"}`.
+    - **Resultado esperado**: Los datos del local se actualizan correctamente.
+    - ![actualizarLocalcasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FactualizarLocalcasoExito.png)
 
-Este proyecto tiene como objetivo optimizar la administración de eventos y mejorar la interacción entre los diferentes actores involucrados, asegurando un proceso más fluido y accesible.
+- **Prueba 2**: Intentar actualizar un local inexistente.
+    - **Entrada**: JSON con el `nombre` de un local no registrado.
+    - **Esperado**:
+        - Código: `404 Not Found`.
+        - Respuesta: `{"mensaje": "Local no encontrado"}`.
+    - **Resultado esperado**: Error indicando que el local no existe.
+    - ![actualizarlocalCasoFallo2.png](src%2Fmain%2Fresources%2FCapturas%2FactualizarlocalCasoFallo2.png)
+
+- **Prueba 3**: Intentar actualizar como usuario no autorizado.
+    - **Entrada**: JSON con datos válidos pero enviado por un usuario no propietario o sin permisos de administrador.
+    - **Esperado**:
+        - Código: `403 Forbidden`.
+        - Respuesta: `{"mensaje": "Accion no autorizada,solo los admin pueden cambiar el propietario del local"}`.
+    - **Resultado esperado**: Error indicando que no tiene permisos para actualizar.
+    - ![actualizarlocalCasoFallo4.png](src%2Fmain%2Fresources%2FCapturas%2FactualizarlocalCasoFallo4.png)
+
+---
+
+### 8. **Pruebas de Endpoint `GET /locales/alllocal`**
+
+- **Prueba 1**: Obtener la lista de locales registrados.
+    - **Entrada**: No requiere parámetros.
+    - **Esperado**:
+        - Código: `200 OK`.
+        - Respuesta: JSON con la lista de locales y datos filtrados.
+    - **Resultado esperado**: Lista de locales correctamente devuelta.
+    - ![casoExitoAllLocal.png](src%2Fmain%2Fresources%2FCapturas%2FcasoExitoAllLocal.png)
+
+- **Prueba 2**: Obtener lista de locales cuando no hay registros.
+    - **Entrada**: No requiere parámetros.
+    - **Esperado**:
+        - Código: `200 OK`.
+        - Respuesta: `{"mensaje": "No hay locales registrados"}`.
+    - **Resultado esperado**: Mensaje indicando que no hay locales disponibles.
+    - ![getAllLocalCasoFallido.png](src%2Fmain%2Fresources%2FCapturas%2FgetAllLocalCasoFallido.png)
+      Aquí está la documentación de los endpoints basada en el formato establecido:
+
+---
+
+### Documentación de los Endpoints
+
+#### 9. **POST /reservas/register**
+- **Prueba 1**: Registrar una reserva válida.
+    - **Entrada**: JSON con `local`, `diaEvento`, `tipoDeEvento`, `totalPersonas`, y `menuIncluido`.
+    - **Esperado**:
+        - **Código**: `201 Created`.
+        - **Respuesta**: Objeto JSON de la reserva creada.
+    - **Resultado esperado**: Reserva registrada con estado `PENDIENTE_DE_PAGO`.
+    - ![registerReservaCasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FregisterReservaCasoExito.png)
+- **Prueba 2**: Intentar registrar una reserva sin datos obligatorios (`local`).
+    - **Entrada**: JSON incompleto.
+    - **Esperado**:
+        - **Código**: `400 Bad Request`.
+        - **Respuesta**: {"ERROR": "la reserva debe de tener un local"}.
+    - **Resultado esperado**: Mensaje de error.
+    - ![crearReservaCasoFallo.png](src%2Fmain%2Fresources%2FCapturas%2FcrearReservaCasoFallo.png)
+- **Prueba 3**: Registrar una reserva con conflicto (fecha ya ocupada).
+    - **Entrada**: JSON con `diaEvento` y `local` duplicados.
+    - **Esperado**:
+        - **Código**: `400 Bad Request`.
+        - **Respuesta**: {"Error": "La fecha seleccionada ya está reservada para este local"}.
+    - **Resultado esperado**: Mensaje de error.
+    - ![crearReservaCasoFallido2.png](src%2Fmain%2Fresources%2FCapturas%2FcrearReservaCasoFallido2.png)
+
+---
+
+#### 10. **DELETE /reservas/eliminarReserva/{id}**
+- **Prueba 1**: Eliminar una reserva válida.
+    - **Entrada**: `id` de una reserva existente.
+    - **Esperado**:
+        - **Código**: `200 OK`.
+        - **Respuesta**: {"mensaje": "Reserva eliminada"}.
+    - **Resultado esperado**: Reserva eliminada correctamente.
+    - ![eliminarReservaCasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarReservaCasoExito.png)
+- **Prueba 2**: Intentar eliminar una reserva inexistente.
+    - **Entrada**: `id` de reserva no encontrada.
+    - **Esperado**:
+        - **Código**: `404 Not Found`.
+        - **Respuesta**: {"ERROR": "id reserva no encontrada"}.
+    - **Resultado esperado**: Mensaje de error.
+    - ![eliminarReervaCasoFallido.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarReervaCasoFallido.png)
+- **Prueba 3**: Eliminar una reserva sin autorización.
+    - **Entrada**: `id` de una reserva perteneciente a otro usuario.
+    - **Esperado**:
+        - **Código**: `403 Forbidden`.
+        - **Respuesta**: {"mensaje": "Accion no autorizada"}.
+    - **Resultado esperado**: Mensaje de error.
+    - ![eliminarReservaCasoFallido3.png](src%2Fmain%2Fresources%2FCapturas%2FeliminarReservaCasoFallido3.png)
+
+---
+
+#### 11. **PUT /reservas/actualizarreserva**
+- **Prueba 1**: Actualizar una reserva válida.
+    - **Entrada**: JSON con los campos actualizables de una reserva existente.
+    - **Esperado**:
+        - **Código**: `200 OK`.
+        - **Respuesta**: {"mensaje": "Reserva actualizada correctamente"}.
+    - **Resultado esperado**: Actualización exitosa.
+    - ![img.png](src%2Fmain%2Fresources%2FCapturas%2Fimg.png)
+- **Prueba 2**: Intentar actualizar una reserva con cambios no permitidos (fecha).
+    - **Entrada**: JSON modificando la fecha del evento.
+    - **Esperado**:
+        - **Código**: `400 Bad Request`.
+        - **Respuesta**: {"mensaje": "La fecha del evento no puede ser modificada"}.
+    - **Resultado esperado**: Mensaje de error.
+    - ![actualizaReservaCasoFalilido.png](src%2Fmain%2Fresources%2FCapturas%2FactualizaReservaCasoFalilido.png)
+- **Prueba 3**: Actualizar sin autorización.
+    - **Entrada**: JSON de una reserva que pertenece a otro usuario.
+    - **Esperado**:
+        - **Código**: `403 Forbidden`.
+        - **Respuesta**: {"mensaje": "Acción no autorizada"}.
+    - **Resultado esperado**: Mensaje de error.
+    - ![actualizarReservaCasoFallido1.png](src%2Fmain%2Fresources%2FCapturas%2FactualizarReservaCasoFallido1.png)
+
+---
+
+#### 12. **GET /reservas/tusreservas**
+- **Prueba 1**: Consultar reservas existentes.
+    - **Entrada**: Autenticación válida.
+    - **Esperado**:
+        - **Código**: `200 OK`.
+        - **Respuesta**: Lista de reservas del usuario autenticado.
+    - **Resultado esperado**: Lista de reservas devuelta correctamente.
+    - ![verReservasCasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FverReservasCasoExito.png)
+- **Prueba 2**: Consultar reservas sin registros.
+    - **Entrada**: Autenticación válida.
+    - **Esperado**:
+        - **Código**: `200 OK`.
+        - **Respuesta**: {"mensaje": "No tienes reservas registradas"}.
+    - **Resultado esperado**: Mensaje de que no hay reservas.
+    - ![verTusReservasCasoExito.png](src%2Fmain%2Fresources%2FCapturas%2FverTusReservasCasoExito.png)
+---
+#### **a. Tecnologías utilizadas**
+
+##### i. **Dependencias incluidas en el proyecto**
+- **Spring Boot**: Para implementar los controladores REST y manejar peticiones HTTP.
+- **Spring Boot Security**: Para la autenticación y autorización de usuarios.
+- **Xammp**: Base de datos para almacenar la información del sistema.
+- **PasswordEncoder (BCrypt)**: Para encriptar las contraseñas de los usuarios.
+
+##### ii. **Software utilizado**
+- **IntelliJ IDEA**: IDE para escribir, depurar y gestionar el código del proyecto.
+- **Insomnia**: Para probar los endpoints de la API REST con distintas solicitudes y verificar su funcionamiento.
+- **GitHub**: Para el control de versiones y almacenamiento del repositorio.
+
+##### iii. **Tecnologías y su propósito**
+- **Spring Boot**: Framework principal para el desarrollo del backend, 
+que simplifica la configuración y permite una rápida implementación de la API REST.
+- **Hibernate (JPA)**: Herramienta ORM para mapear las tablas de la base de datos en clases Java
+y facilitar las operaciones CRUD.
+- **Xammp**: Almacenar de manera persistente la información de usuarios, reservas y configuraciones.
+- **Spring Security**: Proporciona autenticación, autorización y protección de la API frente a accesos no autorizados.
+- **Insomnia**: Envios de solicitudes HTTP a los endpoints y validar las respuestas.
+
+---
+
+#### **b. API REST**
+
+##### **¿Qué es una API REST?**
+Una interfaz que permite la comunicación entre sistemas utilizando el protocolo HTTP.
+utiliza operaciones estándar como GET, POST, PUT y DELETE.
+
+##### **Principios de una API REST**
+1. **Cliente-Servidor**: Los cliente solicitan recursos al servidor central.
+2. **Stateless**: Cada petición es independiente y no depende de estados previos.
+3. **Cacheable**: Las respuestas pueden ser cacheadas para optimizar el rendimiento.
+4. **Uniform Interface**: Uso de una interfaz estándar y consistente.
+
+##### **Identificación de principios en la implementación**
+- **Client-Server**: El cliente realiza peticiones a la API y recibe respuestas JSON sin interferir en la lógica del servidor.
+- **Stateless**: Cada solicitud incluye la información necesaria (como credenciales en los headers) y no depende del estado del servidor.
+- **Cacheable**: No esta configurado un sistema de cacheo, las respuestas GET podrían beneficiarse de ello en el futuro.
+- **Uniform Interface**: Todos los endpoints siguen convenciones estándar (por ejemplo, `/reservas/register` para crear reservas).
+
+---
+
+#### **c. Ventajas de la separación de responsabilidades entre cliente y servidor**
+
+1. **Independencia en el desarrollo**: Los equipos pueden trabajar de forma paralela en el frontend y backend sin bloquearse mutuamente.
+2. **Escalabilidad**: Permite actualizar o escalar el cliente o el servidor de forma independiente según las necesidades.
+3. **Reutilización**: Una API puede ser consumida por múltiples clientes (aplicaciones web, móviles, etc.).
+4. **Seguridad**: La lógica sensible y los datos críticos se gestionan en el servidor, mientras que el cliente solo interactúa con los recursos necesarios.
+5. **Mantenimiento más sencillo**: Los cambios en una capa no afectan directamente a la otra, reduciendo los riesgos.  

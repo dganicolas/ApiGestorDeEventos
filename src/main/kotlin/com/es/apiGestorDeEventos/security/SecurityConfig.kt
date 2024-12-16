@@ -42,7 +42,7 @@ class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,"/usuarios/alluser").hasRole("ADMIN")
                 .requestMatchers("/locales/*").authenticated()
                 .anyRequest().authenticated()
-            }// los recursos protegidos y publicos
+            }
             .oauth2ResourceServer{ oauth2-> oauth2.jwt(Customizer.withDefaults()) }
             .sessionManagement{ session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)}
             .httpBasic(Customizer.withDefaults())
@@ -60,7 +60,6 @@ class SecurityConfig {
         return authenticationConfiguration.authenticationManager
     }
 
-    //meotod para codificar un JWT
     @Bean
     fun jwtEncoder():JwtEncoder {
         val jwk: JWK = RSAKey.Builder(rsaKeys.publicKey).privateKey(rsaKeys.privateKey).build()
@@ -68,7 +67,6 @@ class SecurityConfig {
         return NimbusJwtEncoder(jwks)
         }
 
-    //metodo para decodificar el JWT
     @Bean
     fun jwtDecoder(): JwtDecoder{
         return  NimbusJwtDecoder.withPublicKey(rsaKeys.publicKey).build()

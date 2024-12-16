@@ -7,6 +7,7 @@ import java.security.interfaces.RSAPublicKey
 
 @ConfigurationProperties(prefix = "rsa")
 data class RSAKeysProperties(
+
     var publicKey : RSAPublicKey,
     var privateKey: RSAPrivateKey
 )

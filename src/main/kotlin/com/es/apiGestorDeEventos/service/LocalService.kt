@@ -22,7 +22,6 @@ class LocalService {
 
     fun crearLocal(newLocal: Locales, authentication: Authentication): ResponseEntity<Any>? {
         val propietario = usuarioService.findByUsername(authentication.name)
-            ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
 
         if (localRepository.findByNombre(newLocal.nombre).isPresent) return ResponseEntity(
             mapOf("mensaje" to "El nombre del local ya existe"),
@@ -64,14 +63,19 @@ class LocalService {
         }
     }
 
+    fun findById(id:Long): Locales? {
+        return localRepository.findById(id).orElseThrow {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Local no encontrado")
+        }
+    }
+
     fun comprobarSiElLocalNoTieneReservas(local: Locales): Boolean {
-        local.reservas.forEach { if (it.estado.name == "CONFIRMADA" || it.estado.name == "PENDIENTE_DE_PAGO") return false }
+        local.reservas.forEach { if (it.estado?.name == "CONFIRMADA" || it.estado?.name == "PENDIENTE_DE_PAGO") return false }
         return true
     }
 
     fun eliminarLocal(nombre: String, authentication: Authentication): ResponseEntity<Any>? {
         val propietario = usuarioService.findByUsername(authentication.name)
-            ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
         val local =
             findByNombre(nombre) ?: return ResponseEntity(mapOf("mensaje" to "Usuario no existe"), HttpStatus.NOT_FOUND)
         if (local.propietario != propietario.idUsuario && !authentication.authorities.any { it.authority == "ROLE_ADMIN" }) return ResponseEntity(
@@ -100,10 +104,7 @@ class LocalService {
         local: Locales,
         authentication: Authentication,
     ): ResponseEntity<Any> {
-        val propietario = usuarioService.findByUsername(authentication.name) ?: throw ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Usuario no encontrado"
-        )
+        val propietario = usuarioService.findByUsername(authentication.name)
 
         val localExistente = local.nombre?.let { findByNombre(it) }
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Local no encontrado")
@@ -126,17 +127,30 @@ class LocalService {
                 HttpStatus.FORBIDDEN
             )
         }
-        // Guarda el usuario con el local actualizado
         localRepository.save(localExistente)
         return ResponseEntity(mapOf("mensaje" to "local actualizado correctamente"), HttpStatus.OK)
     }
 
     fun getAllLocal(): ResponseEntity<Any> {
-        val locales = localRepository.findAll() // Obtener todos los usuarios de la base de datos
+        val locales = localRepository.findAll()
         if (locales.isEmpty()) {
             return ResponseEntity(mapOf("mensaje" to "No hay locales registrados"), HttpStatus.OK)
         }
-        return ResponseEntity(locales, HttpStatus.OK)
+        val localesSoloFecha = locales.map { local ->
+            local.reservas.forEach {
+                it.estado = null
+                it.total = null
+                it.idCliente = null
+                it.menuIncluido = null
+                it.totalPersonas = null
+                it.local = null
+                it.idCliente = null
+                it.tipoDeEvento = null
+                it.idReserva = null
+            }
+            local
+        }
+        return ResponseEntity(localesSoloFecha, HttpStatus.OK)
     }
 
 }
